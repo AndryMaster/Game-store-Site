@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Сисок игр</h1>
+{% if current_user.is_authenticated %}
+<a href="/add_game" class="btn btn-secondary">Предложить игру</a>
+{% endif %}
+{% for game in games %}
+<br>
+<a class="no_effect" href="/games/{{  game.id  }}">
+  <div class="col-md6 border rounded">
+    <h2>{{ game.title }}</h2>
+    <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
+    <div>
+      <b>{{ game.value_to_str(game.discount_price) }}</b>
+    </div>
+    <div>
+      Издатель - {{ game.developer_name }}, Дата издания - {{ game.published_date }}
+    </div>
+  </div>
+</a>
+{% endfor %}
+{% endblock %}

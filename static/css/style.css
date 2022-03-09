@@ -1,0 +1,56 @@
+.img_format_300_200 {
+    width: 300px;
+    height: 200px;
+    border-style: solid;
+}
+
+/*.img_format_300_200 img {*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    object-fit: cover;*/
+/*    object-position: center;*/
+/*}*/
+
+.img_format_200_250 {
+    width: 200px;
+    height: 250px;
+    border-style: solid;
+}
+
+.img_corr img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+
+a.no_effect:active, /* активная/посещенная ссылка */
+a.no_effect:hover,  /* при наведении */
+a.no_effect {
+    text-decoration: none;
+    color: #000000;
+}
+
+/*:hover :active*/
+/*background-image: linear-gradient(180deg, transparent 65%, #5bf 65%); for btn*/
+
+td.title {
+    background-color: #dddddd;
+    align: center;
+    font-size: 14pt;
+    padding: 5px;
+}
+td.ordinary {
+    background-color: #eeeeff;
+    align: center;
+    font-size: 14pt;
+    padding: 5px;
+}
+h4 {
+    color: #cccccc;
+    padding: 20px;
+}
+p {
+    font-size: 14pt;
+}

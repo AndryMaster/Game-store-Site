@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div>
+  <h1>{{ game.title }}</h1>
+  <img src="{{ game.get_img_urls()['Wide'] }}" alt="Картинка из игры" align="center">
+  <h3>Цена: {{ price['op'] }}</h3>
+  <h4>Разработчик: {{ game.developer_name }}<br>
+      Дата создания: {{ game.published_date }}<br>
+      Дата публикации:  {{ game.placement_date }}</h4><br>
+
+  {% if current_user.is_authenticated %}
+    <!--  Buttons ...-->
+  {% endif %}
+
+  <h2>Комментарии</h2>
+  {% for comment in comments %}
+    <p>{{ comment.content }}</p>
+  {% endfor %}
+</div>
+
+{% endblock %}
