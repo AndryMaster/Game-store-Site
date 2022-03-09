@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, request, abort
+from flask import Flask, render_template, redirect, request, abort, Response, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
-from forms.games import FindForm
+from forms.game import FindForm
+from forms.comment import CreateComment
 from forms.user import RegisterForm, LoginForm
 
 from data.comments import Comments
@@ -26,7 +27,7 @@ def load_user(user_id):
 @login_required
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect(url_for("store"))
 
 
 @app.route("/index")
@@ -41,18 +42,19 @@ def store():
         games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin).all()
     else:
         games = db_sess.query(Games).filter(Games.is_open).all()
-    return render_template("index.html", games=games)
+    return render_template("index.html", games=games, title='RARE Games Store')
 
 
 @app.route("/games/<int:id>/")
 def games(id):
+    print(url_for("games", id=id))
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         game = db_sess.query(Games).filter(Games.id == id, (Games.is_open |
                                            Games.user_id == current_user.id | current_user.is_admin)).first()
         comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
         if game:
-            return render_template("game.html", game=game, comments=comments,
+            return render_template("game.html", game=game, title=f'RARE: {game.title}', comments=comments,
                                    price={'op': value_to_str(game.original_price)})
     return abort(404)
 
@@ -66,7 +68,7 @@ def games_open(id):
         if game:
             game.show_all()
             db_sess.commit()
-            redirect(f"/games/{id}/")
+            redirect(url_for("games", id=id))
     return abort(404)
 
 
@@ -79,8 +81,23 @@ def games_delete(id):
         if game:
             db_sess.delete(game)
             db_sess.commit()
-            redirect("/")
+            redirect(url_for("store"))
     return abort(404)
+
+
+@app.route("/games/<int:id>/comment/")
+def comment(id):
+    form = CreateComment()
+    if form.validate_on_submit() and current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        if not db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first():
+            comment = Comments(rating=form.rating.data, content=form.content.data)
+            db_sess.add(comment)
+            db_sess.commit()
+        redirect(url_for("games", id=id))
+    elif not current_user.is_authenticated:
+        abort(404)
+    return render_template('add_comment.html', title='Добавление комментария', form=form)
 
 
 @app.route("/add_game")
@@ -94,9 +111,9 @@ def games_find():
                                           categories=form.categories.data):
                 add_game(game, user_id=current_user.id)
             db_sess.commit()
-            redirect("/")
+            redirect(url_for("store"))
         return abort(404)
-    return render_template('game_add.html', title='Добавление игры', form=form)
+    return render_template('add_game.html', title='Добавление игры', form=form)
 
 
 # @app.route('/news', methods=['GET', 'POST'])
@@ -237,6 +254,8 @@ def main():
     #     add_game(game, user_id=1)
     # db_sess.commit()
 
+# error_response = Response("You do not have access rights to the page or it does not exist\n"
+#                           "(У вас нет прав доступа к странице или её не существует)!")
 
 if __name__ == '__main__':
     main()

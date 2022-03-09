@@ -29,6 +29,7 @@ class Games(SqlAlchemyBase):
 
     def show_all(self):
         self.is_open = True
+        # self.placement_date = datetime.datetime.now
 
     def get_img_urls(self) -> dict:
         return {'Wide': self.image_urls.split(';')[0],
@@ -39,7 +40,7 @@ class Games(SqlAlchemyBase):
 
     def set_published_date(self, date_str: str):
         y, m, d = list(map(int, date_str.split('-')))
-        self.published_date = datetime.date(year=y, month=m, day=d)  # datetime
+        self.published_date = datetime.datetime(year=y, month=m, day=d)  # date
 
     def value_to_str(self, value, is_total=False):
         if isinstance(value, int) or isinstance(value, float):

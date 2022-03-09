@@ -1,23 +1,74 @@
 {% extends "base.html" %}
+<meta charset="UTF-8">
 
 {% block content %}
+<style>
+  .wide_img {
+    width: 480px;
+    height: 270px;
 
-<div>
-  <h1>{{ game.title }}</h1>
-  <img src="{{ game.get_img_urls()['Wide'] }}" alt="Картинка из игры" align="center">
-  <h3>Цена: {{ price['op'] }}</h3>
-  <h4>Разработчик: {{ game.developer_name }}<br>
-      Дата создания: {{ game.published_date }}<br>
-      Дата публикации:  {{ game.placement_date }}</h4><br>
+    border: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .wide_img img {
+    height: 100%;
+    width: auto;
+  }
+</style>
 
-  {% if current_user.is_authenticated %}
-    <!--  Buttons ...-->
-  {% endif %}
+<h1>{{ game.title }}</h1>
 
-  <h2>Комментарии</h2>
-  {% for comment in comments %}
-    <p>{{ comment.content }}</p>
-  {% endfor %}
+<div class="wide_img">
+  <img src="{{ game.get_img_urls()['Wide'] }}" alt="Картинка из игры">
 </div>
+
+<h3>Цена: {{ price['op'] }}</h3>
+
+<h4>Разработчик: {{ game.developer_name }}<br>
+    Дата создания: {{ game.published_date }}<br>
+    Дата публикации:  {{ game.placement_date }}</h4><br>
+
+{% if current_user.is_authenticated %}
+  <!--  Buttons  -->
+  {% if not game.is_open and (current_user.id == game.user_id or current_user.is_admin) %}
+    <p>
+      <a class="btn btn-primary" href="/games/{{ game.id }}/open/">Открыть для общего доступа</a>
+      <a class="btn btn-danger" href="/games/{{ game.id }}/delete/">Удалить из магазина</a>
+    </p>
+  {% else %}
+    <p>
+      <a class="btn btn-success" href="/games/{{ game.id }}/comment/">Добавить комментарий</a>
+      <a class="btn btn-primary" href="/games/{{ game.id }}/add_favorites/">Добавить в избранное</a>
+      <a class="btn btn-warning" href="/games/{{ game.id }}/add_basket/">Добавить в корзину</a>
+      {% if current_user.is_admin %}
+        <a class="btn btn-danger" href="/games/{{ game.id }}/delete/">Удалить из магазина</a>
+      {% endif %}
+    </p>
+  {% endif %}
+{% endif %}
+
+<h2>Комментарии</h2>
+{% for comment in comments %}
+  <div class="col-md6 border rounded">
+    <h2>{{ comment.user.name }}</h2>
+    <div>
+      Оценка: {{ comment.rate }}/10
+    </div>
+    <div>
+      Дата написания - {{ comment.published_date }}
+    </div>
+    <div>
+      Дата: {{ comment.content }}
+    </div>
+    {% if current_user.is_authenticated and (current_user == comment.user or current_user.is_admin) %}
+      <div>
+        <a href="/games/{{ game.id }}/comment_settings/" class="btn btn-warning">Изменить</a>
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}
 
 {% endblock %}

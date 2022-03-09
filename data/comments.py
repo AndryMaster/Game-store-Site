@@ -16,3 +16,6 @@ class Comments(SqlAlchemyBase):
     rating = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     content = sqlalchemy.Column(sqlalchemy.String(256), nullable=True)
     published_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
+
+    def update_date(self):
+        self.published_date = datetime.datetime.now

@@ -1,16 +1,36 @@
 {% extends "base.html" %}
+<meta charset="UTF-8">
 
 {% block content %}
+<style>
+  .tall_img {
+    width: 256px;
+    height: 284px;
+
+    border: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .tall_img img {
+    height: 100%;
+    width: auto;
+  }
+</style>
+
 <h1>Сисок игр</h1>
 {% if current_user.is_authenticated %}
-<a href="/add_game" class="btn btn-secondary">Предложить игру</a>
+<br><a href="/add_game" class="btn btn-secondary">Предложить игру</a><br>
 {% endif %}
 {% for game in games %}
 <br>
 <a class="no_effect" href="/games/{{  game.id  }}">
   <div class="col-md6 border rounded">
-    <h2>{{ game.title }}</h2>
-    <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
+    <h2>{% if not game.is_open %}*{% endif %}{{ game.title }}</h2>
+    <div class="tall_img">
+      <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
+    </div>
     <div>
       <b>{{ game.value_to_str(game.discount_price) }}</b>
     </div>
