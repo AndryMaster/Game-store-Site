@@ -2,20 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectMultipleField, SubmitField, SelectField
 from wtforms.validators import DataRequired, length, number_range
 
-from wtforms.widgets import ListWidget, CheckboxInput
+from wtforms.widgets import ListWidget, CheckboxInput, Select
 from pharse import Categories
-
-
-class MultiCheckboxField(SelectMultipleField):
-    widget = ListWidget(prefix_label=False)
-    option_widget = CheckboxInput()
-
-
-# class BrifStoreForm(Form):
-#     choices = [(1, 'one'),
-#                (2, 'two'),
-#                (3, 'tree')]
-#     resident = MultiCheckboxField('Label', choices=choices, coerce=int)
 
 # {% if form.resident.data %}
 #         {{ form.resident.data }}
@@ -27,7 +15,7 @@ class MultiCheckboxField(SelectMultipleField):
 #     validate) multiple choices.  You'll need to specify the HTML `size`
 #     attribute to the select field when rendering.
 #     """
-#     widget = widgets.Select(multiple=True)
+#     widget = Select(multiple=True)
 #
 #     def iter_choices(self):
 #         for value, label in self.choices:
@@ -53,10 +41,22 @@ class MultiCheckboxField(SelectMultipleField):
 #                 if d not in values:
 #                     raise ValueError(self.gettext("'%(value)s' is not a valid choice for this field") % dict(value=d))
 
+# class BrifStoreForm(Form):
+#     choices = [(1, 'one'),
+#                (2, 'two'),
+#                (3, 'tree')]
+#     resident = MultiCheckboxField('Label', choices=choices, coerce=int)
+
+# class MultiCheckboxField(SelectMultipleField):
+#     widget = ListWidget(prefix_label=False)
+#     option_widget = CheckboxInput()
+
 
 class FindForm(FlaskForm):
-    keywords = StringField("Ключевые слова", validators=[length(max=32)])
-    categories = SelectMultipleField("Категории", choices=[list(elem).reverse() for elem in Categories.items()])
+    # choices = [list(elem).reverse() for elem in Categories.items()]  # Categories not iterable
+    keywords = StringField("Ключевые слова (нежелательно писать более 1 слова)", validators=[length(max=32)])
+    # categories = SelectMultipleField("Категории", choices=[list(elem).reverse() for elem in Categories.items()])
+    # categories = MultiCheckboxField("Категории", choices=choices, coerce=str)  # coerce=int (str)
     result_count = IntegerField("Максимальное кол-во результатов (не более 5)",
                                 validators=[DataRequired(), number_range(1, 5)], default=3)
     submit = SubmitField('Поиск (фильтровать)')

@@ -111,7 +111,8 @@ def comment_delete(id, comment_id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         comment = db_sess.query(Comments).filter(Comments.id == comment_id).first()
-        db_sess.delete(comment)
+        if comment.user_id == current_user.id and comment.game_id == id:
+            db_sess.delete(comment)
         db_sess.commit()
         return redirect(url_for("games", id=id))
     else:
@@ -119,15 +120,15 @@ def comment_delete(id, comment_id):
 
 
 @app.route("/add_game", methods=['GET', 'POST'])
-def games_find():
+def add_games():
     form = FindForm()
     db_sess = db_session.create_session()
-    if form.validate_on_submit():
+    if form.validate_on_submit() and request.method == 'POST':
         if current_user.is_authenticated:
             count = form.result_count.data
-            for game in game_find_similar(result_count=count + 3,
-                                          start=0, count=50, keywords=form.keywords.data,
-                                          categories=form.categories.data):
+            categories = [Categories[cat] for cat in Categories.keys() if cat in request.form]
+            for game in game_find_similar(result_count=count, count=50,
+                                          keywords=form.keywords.data, categories=categories):
                 if add_game(game, user_id=current_user.id):
                     count -= 1
                     if not count:
@@ -198,9 +199,9 @@ def main():
     app.run(host='127.0.0.1', port=8080, debug=True)
 
     # db_sess = db_session.create_session()
-    # for game in game_find_similar(result_count=5,
+    # for game in game_find_similar(result_count=2,
     #                               start=0, count=50, keywords='',
-    #                               categories=[Categories['CATEGORY_RACING']]):
+    #                               categories=[Categories['CATEGORY_ADVENTURE']]):
     #     add_game(game, user_id=1)
     # db_sess.commit()
 

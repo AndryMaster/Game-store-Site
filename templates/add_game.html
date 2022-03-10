@@ -2,37 +2,41 @@
 <meta charset="UTF-8">
 
 {% block content %}
-    <h1>Поиск новой игры</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.keywords.label }}<br>
-            {{ form.keywords(class="form-control") }}<br>
-            {% for error in form.keywords.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.categories.label }}<br>
-            {{ form.categories(class="form-control") }}<br>
-            {% for error in form.categories.errors %}
-                <p content="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.result_count.label }}<br>
-            {{ form.result_count(class="form-control") }}<br>
-            {% for error in form.result_count.errors %}
-                <p content="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-            {% endfor %}
-        </p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-        {{ message }}
-    </form>
+<h1>Поиск новой игры</h1>
+<form action="" method="post">
+  {{ form.hidden_tag() }}
+  <p>
+    {{ form.keywords.label }}<br>
+    {{ form.keywords(class="form-control") }}<br>
+    {% for error in form.keywords.errors %}
+      <p class="alert alert-danger" role="alert">
+				{{ error }}
+      </p>
+    {% endfor %}
+  </p>
+  <p>
+	{% set Categories = ['CATEGORY_ACTION', 'CATEGORY_ADVENTURE', 'CATEGORY_EDITOR', 'CATEGORY_MULTIPLAYER',
+    'CATEGORY_PUZZLE', 'CATEGORY_RACING', 'CATEGORY_RPG', 'CATEGORY_SHOOTER', 'CATEGORY_SINGLE_PLAYER',
+    'CATEGORY_STRATEGY', 'CATEGORY_SURVIVAL', 'CATEGORY_OSX', 'CATEGORY_WINDOWS'] %}
+  <label for="eduSelect">Категории и разделы игр:</label>
+  <div class="form-group form-check">
+	  {% for category in Categories %}
+	    <input type="checkbox" class="form-check-input" id="cat" name="{{ category }}">
+	    <label class="form-check-label" for="acceptRules">{{ category }}</label><br>
+		{% endfor %}<br>
+  </div>
+  </p>
+  <p>
+    {{ form.result_count.label }}<br>
+    {{ form.result_count(class="form-control") }}<br>
+    {% for error in form.result_count.errors %}
+      <p content="alert alert-danger" role="alert">
+        {{ error }}
+      </p>
+    {% endfor %}
+  </p>
+
+  <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+  {{ message }}
+</form>
 {% endblock %}

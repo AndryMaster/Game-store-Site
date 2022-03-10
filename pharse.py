@@ -43,8 +43,8 @@ def open_info(game):
     return info
 
 
-def game_find_similar(result_count=5, start=0, count=50, keywords='', categories=[]):
-    data = __request.fetch_catalog(start=start, count=count, product_type='games',  # sort_by='effectiveDate',
+def game_find_similar(result_count=5, start=0, count=50, keywords='', categories=[], recurse=1):
+    data = __request.fetch_catalog(start=start, count=count, product_type='games', sort_by='effectiveDate',
                                    keywords=keywords, categories=categories)
     data = data['data']['Catalog']['catalogOffers']['elements']
     result = []
@@ -52,6 +52,10 @@ def game_find_similar(result_count=5, start=0, count=50, keywords='', categories
         if index == result_count:
             break
         result.append(open_info(game))
+    # if len(result) < result_count and recurse <= 3:
+    #     result.extend(game_find_similar(result_count=result_count-len(result), start=start+count,
+    #                                     count=count, recurse=recurse+1, keywords=keywords, categories=categories))
+    print('Find all:', len(result))
     return result
 
 
