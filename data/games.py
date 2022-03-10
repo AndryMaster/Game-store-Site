@@ -29,7 +29,7 @@ class Games(SqlAlchemyBase):
 
     def show_all(self):
         self.is_open = True
-        # self.placement_date = datetime.datetime.now
+        self.placement_date = datetime.datetime.now()
 
     def get_img_urls(self) -> dict:
         return {'Wide': self.image_urls.split(';')[0],

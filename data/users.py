@@ -15,6 +15,8 @@ class User(SqlAlchemyBase, UserMixin):
     email = sqlalchemy.Column(sqlalchemy.String(64), index=True, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
+    # user_favorites = sqlalchemy.Column(sqlalchemy.String(), nullable=True)  # ++orm.relationship
+    # user_basket = sqlalchemy.Column(sqlalchemy.String(), nullable=True)  # ++orm.relationship
     is_admin = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
 
     games = orm.relation("Games", back_populates='user')

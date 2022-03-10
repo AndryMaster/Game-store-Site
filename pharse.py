@@ -4,7 +4,7 @@ from epicstore_api.models.categories import EGSCategory
 
 
 Categories = {
-    'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Приключения
+    'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Боевой
     'CATEGORY_ADVENTURE': EGSCategory.CATEGORY_ADVENTURE,  # Приключения
     'CATEGORY_EDITOR': EGSCategory.CATEGORY_EDITOR,  # Создание
     'CATEGORY_MULTIPLAYER': EGSCategory.CATEGORY_MULTIPLAYER,  # Мультиплеер
@@ -19,7 +19,7 @@ Categories = {
     'CATEGORY_WINDOWS': EGSCategory.CATEGORY_WINDOWS  # Windows
 }
 
-request = EpicGamesStoreAPI(locale='ru-RU', country='RU', session=None)
+__request = EpicGamesStoreAPI(locale='ru-RU', country='RU', session=None)
 
 
 def open_info(game):
@@ -44,8 +44,8 @@ def open_info(game):
 
 
 def game_find_similar(result_count=5, start=0, count=50, keywords='', categories=[]):
-    data = request.fetch_catalog(start=start, count=count, product_type='games', sort_by='effectiveDate',
-                                 keywords=keywords, categories=categories)
+    data = __request.fetch_catalog(start=start, count=count, product_type='games',  # sort_by='effectiveDate',
+                                   keywords=keywords, categories=categories)
     data = data['data']['Catalog']['catalogOffers']['elements']
     result = []
     for index, game in enumerate(data):
@@ -53,17 +53,6 @@ def game_find_similar(result_count=5, start=0, count=50, keywords='', categories
             break
         result.append(open_info(game))
     return result
-
-
-# def game_find_one_current(game_name=''):
-#     data = request.fetch_catalog(start=0, count=1, product_type='games', keywords=game_name)  # sort_by='effectiveDate'
-#     print(data['data']['Catalog']['catalogOffers']['elements'])
-#     print(game_name)
-#     data = data['data']['Catalog']['catalogOffers']['elements']
-#     if not data:
-#         return
-#     current_game = data['data']['Catalog']['catalogOffers']['elements'][0]
-#     return open_info(current_game)
 
 
 def value_to_str(value, is_total=False):

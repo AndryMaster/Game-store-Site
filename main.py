@@ -59,7 +59,7 @@ def games(id):
     return abort(404)
 
 
-@app.route("/games/<int:id>/open/")
+@app.route("/games/<int:id>/open/", methods=['GET', 'POST'])
 def games_open(id):
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
@@ -68,11 +68,11 @@ def games_open(id):
         if game:
             game.show_all()
             db_sess.commit()
-            redirect(url_for("games", id=id))
+            return redirect(url_for("games", id=id))
     return abort(404)
 
 
-@app.route("/games/<int:id>/delete/")
+@app.route("/games/<int:id>/delete/", methods=['GET', 'POST'])
 def games_delete(id):
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
@@ -81,106 +81,61 @@ def games_delete(id):
         if game:
             db_sess.delete(game)
             db_sess.commit()
-            redirect(url_for("store"))
+            return redirect(url_for("store"))
     return abort(404)
 
 
-@app.route("/games/<int:id>/comment/")
+@app.route("/games/<int:id>/comment/", methods=['GET', 'POST'])
 def comment(id):
     form = CreateComment()
     if form.validate_on_submit() and current_user.is_authenticated:
         db_sess = db_session.create_session()
-        if not db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first():
-            comment = Comments(rating=form.rating.data, content=form.content.data)
+        comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
+        if not comment:
+            comment = Comments(game_id=id, user_id=current_user.id,
+                               rating=form.rating.data,
+                               content=form.content.data)
             db_sess.add(comment)
-            db_sess.commit()
-        redirect(url_for("games", id=id))
+        else:
+            comment.rating = form.rating.data
+            comment.content = form.content.data
+        db_sess.commit()
+        return redirect(url_for("games", id=id))
     elif not current_user.is_authenticated:
         abort(404)
     return render_template('add_comment.html', title='Добавление комментария', form=form)
 
 
-@app.route("/add_game")
+@app.route("/games/<int:id>/comment_delete/<int:comment_id>/", methods=['GET', 'POST'])
+def comment_delete(id, comment_id):
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        comment = db_sess.query(Comments).filter(Comments.id == comment_id).first()
+        db_sess.delete(comment)
+        db_sess.commit()
+        return redirect(url_for("games", id=id))
+    else:
+        abort(404)
+
+
+@app.route("/add_game", methods=['GET', 'POST'])
 def games_find():
     form = FindForm()
     db_sess = db_session.create_session()
     if form.validate_on_submit():
         if current_user.is_authenticated:
-            for game in game_find_similar(result_count=form.result_count.data,
+            count = form.result_count.data
+            for game in game_find_similar(result_count=count + 3,
                                           start=0, count=50, keywords=form.keywords.data,
                                           categories=form.categories.data):
-                add_game(game, user_id=current_user.id)
+                if add_game(game, user_id=current_user.id):
+                    count -= 1
+                    if not count:
+                        break
             db_sess.commit()
-            redirect(url_for("store"))
+            return redirect(url_for("store"))
         return abort(404)
     return render_template('add_game.html', title='Добавление игры', form=form)
-
-
-# @app.route('/news', methods=['GET', 'POST'])
-# @login_required
-# def add_news():
-#     form = NewsForm()
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = News()
-#         news.title = form.title.data
-#         news.content = form.content.data
-#         news.is_private = form.is_private.data
-#         current_user.news.append(news)
-#         db_sess.merge(current_user)
-#         db_sess.commit()
-#         return redirect('/')
-#     return render_template('news.html', title='Добавление новости', form=form)
-#
-#
-# @app.route('/news_delete/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def news_delete(id):
-#     db_sess = db_session.create_session()
-#     news = db_sess.query(News).filter(News.id == id, News.user == current_user).first()
-#     if news:
-#         db_sess.delete(news)
-#         db_sess.commit()
-#     else:
-#         abort(404)
-#     return redirect('/')
-#
-#
-# @app.route('/news/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def edit_news(id):
-#     form = NewsForm()
-#     if request.method == "GET":
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id, News.user == current_user).first()
-#         if news:
-#             form.title.data = news.title
-#             form.content.data = news.content
-#             form.is_private.data = news.is_private
-#         else:
-#             abort(404)
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         news = db_sess.query(News).filter(News.id == id, News.user == current_user).first()
-#         if news:
-#             news.title = form.title.data
-#             news.content = form.content.data
-#             news.is_private = form.is_private.data
-#             db_sess.commit()
-#             return redirect('/')
-#         else:
-#             abort(404)
-#     return render_template('news.html', title='Редактирование новости', form=form)
-#
-#
-# @app.route("/")
-# def index():
-#     db_sess = db_session.create_session()
-#     if current_user.is_authenticated:
-#         news = db_sess.query(News).filter((News.user == current_user) | (News.is_private != True))
-#     else:
-#         news = db_sess.query(News).filter(News.is_private != True)
-#     return render_template("index.html", news=news)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -202,7 +157,7 @@ def register():
         db_sess.commit()
         # return redirect('/login')
         login_user(user, remember=form.remember_me.data)
-        return redirect("/")
+        return redirect(url_for("store"))
     return render_template('register.html', title='Регистрация', form=form)
 
 
@@ -214,21 +169,14 @@ def login():
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect(url_for("store"))
         return render_template('login.html', message="Неправильный логин или пароль", form=form)
     return render_template('login.html', title='Авторизация', form=form)
 
 
-# def is_admin(id):
-#     db_sess = db_session.create_session()
-#     if db_sess.query(User).filter(User.id == id, User.is_admin).first().is_admin:
-#         return 1
-#     return 0
-
-
 def add_game(data, user_id=0):
     db_sess = db_session.create_session()
-    if data is not None:
+    if data is not None and not db_sess.query(Games).filter(Games.title == data['title']).first():
         game = Games()
         game.title = data['title']
         game.original_price = data['original_price']
@@ -241,6 +189,8 @@ def add_game(data, user_id=0):
         db_sess.add(game)
         db_sess.commit()
         print(f"{game.__repr__()} was add to DB")
+        return True
+    return False
 
 
 def main():

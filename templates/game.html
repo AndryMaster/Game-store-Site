@@ -55,18 +55,19 @@
   <div class="col-md6 border rounded">
     <h2>{{ comment.user.name }}</h2>
     <div>
-      Оценка: {{ comment.rate }}/10
+      Оценка: {{ comment.rating }}/10
     </div>
     <div>
-      Дата написания - {{ comment.published_date }}
+      Дата: {{ comment.published_date }}
     </div>
     <div>
-      Дата: {{ comment.content }}
+      Описание (содержание): {{ comment.content }}
     </div>
     {% if current_user.is_authenticated and (current_user == comment.user or current_user.is_admin) %}
-      <div>
-        <a href="/games/{{ game.id }}/comment_settings/" class="btn btn-warning">Изменить</a>
-      </div>
+      <p>
+        <a href="/games/{{ game.id }}/comment/" class="btn btn-warning">Изменить</a>
+        <a href="/games/{{ game.id }}/comment_delete/{{ comment.id }}/" class="btn btn-danger">Удалить</a>
+      </p>
     {% endif %}
   </div>
 {% endfor %}
