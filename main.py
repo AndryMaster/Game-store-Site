@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, abort, Response, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy import desc, asc
+from flask_restful import Api
 
 from forms.game import FindForm, FilterForm
 from forms.comment import CreateComment
@@ -9,13 +10,14 @@ from forms.user import RegisterForm, LoginForm
 from data.comments import Comments
 from data.games import Games
 from data.users import User
-from data import db_session
+from data import db_session, users_api, games_api
 from pharse import *
 
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key'
+api = Api(app)
 
 
 @login_manager.user_loader
@@ -41,7 +43,7 @@ def store():
     db_sess = db_session.create_session()
     start = request.args.get('start') if request.args.get('start') else 0
     count = request.args.get('count') if request.args.get('count') else 10
-    if request.args.get('search') and request.args.get('sort') in ['desk', 'ask']:
+    if request.args.get('search') and current_user.is_authenticated and request.args.get('sort') in ['desk', 'ask']:
         try:
             sort_item = {'price': Games.discount_price, 'rating': Games.rating,
                          'date': Games.placement_date}[request.args.get('sort_by')]
@@ -225,6 +227,12 @@ def add_game(data, user_id=0):
 
 def main():
     db_session.global_init("db/store.db")
+
+    api.add_resource(users_api.UsersListResource, '/api/v1/users')
+    api.add_resource(users_api.UsersResource, '/api/v1/users/<int:user_id>')
+    api.add_resource(games_api.GamesListResource, '/api/v1/games')
+    api.add_resource(games_api.GamesResource, '/api/v1/games/<int:game_id>')
+
     app.run(host='127.0.0.1', port=8080, debug=True)
 
     # db_sess = db_session.create_session()
