@@ -25,7 +25,15 @@
   <img src="{{ game.get_img_urls()['Wide'] }}" alt="Картинка из игры">
 </div>
 
-<h3>Цена: {{ price['op'] }}</h3>
+<h3>Цена:
+	<b>
+    {% if game.discount %}
+      Скидка {{ game.discount * 100 // game.original_price }}%
+      <s>{{ game.value_to_str(game.original_price) }}</s>
+    {% endif %}
+    {{ game.value_to_str(game.discount_price) }}
+  </b>
+</h3>
 
 <h4>Разработчик: {{ game.developer_name }}<br>
     Дата создания: {{ game.published_date }}<br>

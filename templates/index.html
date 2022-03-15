@@ -21,7 +21,10 @@
 
 <h1>Сисок игр</h1>
 {% if current_user.is_authenticated %}
-<br><a href="/add_game" class="btn btn-secondary">Предложить игру</a><br>
+<br>
+<a href="/add_game" class="btn btn-secondary">Предложить игру</a>
+<a href="/filter" class="btn btn-secondary">Задать фильтр</a>
+<br>
 {% endif %}
 {% for game in games %}
 <br>
@@ -32,7 +35,13 @@
       <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
     </div>
     <div>
-      <b>{{ game.value_to_str(game.discount_price) }}</b>
+	    <b>
+		    {% if game.discount %}
+		      Скидка {{ game.discount * 100 // game.original_price }}%
+		      <s>{{ game.value_to_str(game.original_price) }}</s>
+		    {% endif %}
+		    {{ game.value_to_str(game.discount_price) }}
+	    </b>
     </div>
     <div>
       Издатель - {{ game.developer_name }}, Дата издания - {{ game.published_date }}

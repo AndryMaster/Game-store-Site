@@ -1,28 +1,29 @@
 {% extends "base.html" %}
 <meta charset="UTF-8">
 
+<!--Categories-->
+{% set Categories = [('CATEGORY_SINGLE_PLAYER', 'Синглплеер'), ('CATEGORY_MULTIPLAYER', 'Мультиплеер'),
+('CATEGORY_OSX', 'Платформа Mac OS'), ('CATEGORY_WINDOWS', 'Платформа Windows'),
+('CATEGORY_ACTION', 'Экшн'), ('CATEGORY_ADVENTURE', 'Приключения'),	('CATEGORY_EDITOR', 'Строительство'),
+('CATEGORY_PUZZLE', 'Головоломки'), ('CATEGORY_RACING', 'Гонки'),  ('CATEGORY_RPG', 'РПГ'),
+('CATEGORY_SHOOTER', 'Шутер'), ('CATEGORY_STRATEGY', 'Стратегия'), ('CATEGORY_SURVIVAL', 'Выживание')] %}
+
 {% block content %}
-<h1>Поиск новой игры</h1>
+<h1>Добавление новых игр</h1>
 <form action="" method="post">
   {{ form.hidden_tag() }}
   <p>
     {{ form.keywords.label }}<br>
     {{ form.keywords(class="form-control") }}<br>
     {% for error in form.keywords.errors %}
-      <p class="alert alert-danger" role="alert">
-				{{ error }}
-      </p>
-    {% endfor %}
+      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
   </p>
   <p>
-	{% set Categories = ['CATEGORY_ACTION', 'CATEGORY_ADVENTURE', 'CATEGORY_EDITOR', 'CATEGORY_MULTIPLAYER',
-    'CATEGORY_PUZZLE', 'CATEGORY_RACING', 'CATEGORY_RPG', 'CATEGORY_SHOOTER', 'CATEGORY_SINGLE_PLAYER',
-    'CATEGORY_STRATEGY', 'CATEGORY_SURVIVAL', 'CATEGORY_OSX', 'CATEGORY_WINDOWS'] %}
   <label for="eduSelect">Категории и разделы игр:</label>
   <div class="form-group form-check">
 	  {% for category in Categories %}
-	    <input type="checkbox" class="form-check-input" id="cat" name="{{ category }}">
-	    <label class="form-check-label" for="acceptRules">{{ category }}</label><br>
+	    <input type="checkbox" class="form-check-input" id="cat" name="{{ category[0] }}">
+	    <label class="form-check-label" for="acceptRules">{{ category[1] }}</label><br>
 		{% endfor %}<br>
   </div>
   </p>
@@ -30,10 +31,7 @@
     {{ form.result_count.label }}<br>
     {{ form.result_count(class="form-control") }}<br>
     {% for error in form.result_count.errors %}
-      <p content="alert alert-danger" role="alert">
-        {{ error }}
-      </p>
-    {% endfor %}
+      <p content="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
   </p>
 
   <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>

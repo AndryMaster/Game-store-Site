@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect, request, abort, Response, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from sqlalchemy import desc, asc
 
-from forms.game import FindForm
+from forms.game import FindForm, FilterForm
 from forms.comment import CreateComment
 from forms.user import RegisterForm, LoginForm
 
@@ -38,31 +39,44 @@ def index():
 @app.route("/")
 def store():
     db_sess = db_session.create_session()
-    if current_user.is_authenticated:
-        games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin).all()
+    start = request.args.get('start') if request.args.get('start') else 0
+    count = request.args.get('count') if request.args.get('count') else 10
+    if request.args.get('search') and request.args.get('sort') in ['desk', 'ask']:
+        try:
+            sort_item = {'price': Games.discount_price, 'rating': Games.rating,
+                         'date': Games.placement_date}[request.args.get('sort_by')]
+            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin,
+                                                request.args.get('pstart') <= Games.discount_price,
+                                                Games.discount_price <= request.args.get('pend')
+                                                ).order_by(desc(sort_item) if request.args.get('sort') == 'desk' else
+                                                           asc(sort_item), Games.id).offset(start).limit(count).all()
+        except:
+            return redirect(url_for("store"))
     else:
-        games = db_sess.query(Games).filter(Games.is_open).all()
+        if current_user.is_authenticated:
+            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin
+                                                ).order_by(Games.id).offset(start).limit(count).all()
+        else:
+            games = db_sess.query(Games).filter(Games.is_open).order_by(Games.id).offset(start).limit(count).all()
     return render_template("index.html", games=games, title='RARE Games Store')
 
 
 @app.route("/games/<int:id>/")
 def games(id):
-    print(url_for("games", id=id))
-    db_sess = db_session.create_session()
     if current_user.is_authenticated:
+        db_sess = db_session.create_session()
         game = db_sess.query(Games).filter(Games.id == id, (Games.is_open |
                                            Games.user_id == current_user.id | current_user.is_admin)).first()
         comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
         if game:
-            return render_template("game.html", game=game, title=f'RARE: {game.title}', comments=comments,
-                                   price={'op': value_to_str(game.original_price)})
+            return render_template("game.html", game=game, title=f'RARE: {game.title}', comments=comments)
     return abort(404)
 
 
 @app.route("/games/<int:id>/open/", methods=['GET', 'POST'])
 def games_open(id):
-    db_sess = db_session.create_session()
     if current_user.is_authenticated:
+        db_sess = db_session.create_session()
         game = db_sess.query(Games).filter(Games.id == id, (Games.user_id == current_user.id |
                                                             current_user.is_admin)).first()
         if game:
@@ -74,11 +88,10 @@ def games_open(id):
 
 @app.route("/games/<int:id>/delete/", methods=['GET', 'POST'])
 def games_delete(id):
-    db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        game = db_sess.query(Games).filter(Games.id == id, (Games.user_id == current_user.id |
-                                                            current_user.is_admin)).first()
-        if game:
+        db_sess = db_session.create_session()
+        game = db_sess.query(Games).get(id)
+        if game and (game.user_id == current_user.id or current_user.is_admin):
             db_sess.delete(game)
             db_sess.commit()
             return redirect(url_for("store"))
@@ -88,42 +101,44 @@ def games_delete(id):
 @app.route("/games/<int:id>/comment/", methods=['GET', 'POST'])
 def comment(id):
     form = CreateComment()
-    if form.validate_on_submit() and current_user.is_authenticated:
-        db_sess = db_session.create_session()
-        comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
-        if not comment:
-            comment = Comments(game_id=id, user_id=current_user.id,
-                               rating=form.rating.data,
-                               content=form.content.data)
-            db_sess.add(comment)
-        else:
-            comment.rating = form.rating.data
-            comment.content = form.content.data
-        db_sess.commit()
-        return redirect(url_for("games", id=id))
-    elif not current_user.is_authenticated:
-        abort(404)
-    return render_template('add_comment.html', title='Добавление комментария', form=form)
+    if form.validate_on_submit():
+        if current_user.is_authenticated:
+            db_sess = db_session.create_session()
+            comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
+            if not comment:
+                comment = Comments(game_id=id, user_id=current_user.id,
+                                   rating=form.rating.data,
+                                   content=form.content.data)
+                db_sess.query(Games).get(id).add_rating(10 + form.rating.data)
+                db_sess.add(comment)
+            else:
+                db_sess.query(Games).get(id).add_rating(form.rating.data - comment.rating)
+                comment.rating = form.rating.data
+                comment.content = form.content.data
+                comment.update_date()
+            db_sess.commit()
+            return redirect(url_for("games", id=id))
+        return abort(404)
+    return render_template("add_comment.html", title='Добавление комментария', form=form)
 
 
 @app.route("/games/<int:id>/comment_delete/<int:comment_id>/", methods=['GET', 'POST'])
 def comment_delete(id, comment_id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
-        comment = db_sess.query(Comments).filter(Comments.id == comment_id).first()
-        if comment.user_id == current_user.id and comment.game_id == id:
+        comment = db_sess.query(Comments).get(comment_id)
+        if comment and (comment.user_id == current_user.id or current_user.is_admin) and comment.game_id == id:
+            db_sess.query(Games).get(id).add_rating(-(10 + comment.rating))
             db_sess.delete(comment)
-        db_sess.commit()
-        return redirect(url_for("games", id=id))
-    else:
-        abort(404)
+            db_sess.commit()
+            return redirect(url_for("games", id=id))
+    return abort(404)
 
 
 @app.route("/add_game", methods=['GET', 'POST'])
 def add_games():
     form = FindForm()
-    db_sess = db_session.create_session()
-    if form.validate_on_submit() and request.method == 'POST':
+    if form.validate_on_submit():
         if current_user.is_authenticated:
             count = form.result_count.data
             categories = [Categories[cat] for cat in Categories.keys() if cat in request.form]
@@ -133,23 +148,31 @@ def add_games():
                     count -= 1
                     if not count:
                         break
-            db_sess.commit()
             return redirect(url_for("store"))
         return abort(404)
-    return render_template('add_game.html', title='Добавление игры', form=form)
+    return render_template("add_game.html", title='Добавление игры', form=form)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/filter", methods=['GET', 'POST'])
+def filter():
+    form = FilterForm()
+    if form.validate_on_submit():
+        return redirect(url_for("store", search=True,
+                                sort_by=['rating', 'price', 'date'][(form.data.get('select') - 1) // 2],
+                                sort='desk' if form.data.get('select') % 2 == 1 else 'ask',
+                                pstart=form.data.get('price_start'), pend=form.data.get('price_end')))
+    return render_template("filter.html", title='Поиск игр', form=form)
+
+
+@app.route("/register", methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', title='Регистрация', form=form,
-                                   message="Такой пользователь уже есть")
+            return render_template('register.html', title='Регистрация', form=form, message="Такой пользователь уже есть")
         if form.password.data != form.password_again.data:
-            return render_template('register.html', title='Регистрация', form=form,
-                                   message="Пароли не совпадают")
+            return render_template('register.html', title='Регистрация', form=form, message="Пароли не совпадают")
         user = User(name=form.name.data,
                     email=form.email.data,
                     about=form.about.data)
@@ -159,10 +182,10 @@ def register():
         # return redirect('/login')
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for("store"))
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_template("register.html", title='Регистрация', form=form)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -171,25 +194,31 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect(url_for("store"))
-        return render_template('login.html', message="Неправильный логин или пароль", form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+        return render_template("login.html", message="Неправильный логин или пароль", form=form)
+    return render_template("login.html", title='Авторизация', form=form)
 
 
 def add_game(data, user_id=0):
     db_sess = db_session.create_session()
-    if data is not None and not db_sess.query(Games).filter(Games.title == data['title']).first():
-        game = Games()
-        game.title = data['title']
-        game.original_price = data['original_price']
-        game.discount = data['discount']
-        game.discount_price = data['discount_price']
-        game.developer_name = data['developer_name']
-        game.set_img_urls(data['image_urls'])
-        game.set_published_date(data['published_date'])
-        game.user_id = user_id
-        db_sess.add(game)
+    if data:
+        game = db_sess.query(Games).filter(Games.title == data['title']).first()
+        if not game:
+            game = Games()
+            game.title = data['title']
+            game.original_price = data['original_price']
+            game.discount = data['discount']
+            game.discount_price = data['discount_price']
+            game.developer_name = data['developer_name']
+            game.set_img_urls(data['image_urls'])
+            game.set_published_date(data['published_date'])
+            game.user_id = user_id
+            db_sess.add(game)
+            print(f"{game.__repr__()} was add to DB")
+        else:
+            game.original_price = data['original_price']
+            game.discount = data['discount']
+            game.discount_price = data['discount_price']
         db_sess.commit()
-        print(f"{game.__repr__()} was add to DB")
         return True
     return False
 
@@ -199,14 +228,11 @@ def main():
     app.run(host='127.0.0.1', port=8080, debug=True)
 
     # db_sess = db_session.create_session()
-    # for game in game_find_similar(result_count=2,
-    #                               start=0, count=50, keywords='',
-    #                               categories=[Categories['CATEGORY_ADVENTURE']]):
+    # for game in game_find_similar(start=0, count=50, keywords='',
+    #                               categories=[Categories['CATEGORY_RACING']]):
     #     add_game(game, user_id=1)
     # db_sess.commit()
 
-# error_response = Response("You do not have access rights to the page or it does not exist\n"
-#                           "(У вас нет прав доступа к странице или её не существует)!")
 
 if __name__ == '__main__':
     main()

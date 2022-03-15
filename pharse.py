@@ -4,9 +4,9 @@ from epicstore_api.models.categories import EGSCategory
 
 
 Categories = {
-    'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Боевой
+    'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Экшн
     'CATEGORY_ADVENTURE': EGSCategory.CATEGORY_ADVENTURE,  # Приключения
-    'CATEGORY_EDITOR': EGSCategory.CATEGORY_EDITOR,  # Создание
+    'CATEGORY_EDITOR': EGSCategory.CATEGORY_EDITOR,  # Строительство
     'CATEGORY_MULTIPLAYER': EGSCategory.CATEGORY_MULTIPLAYER,  # Мультиплеер
     'CATEGORY_PUZZLE': EGSCategory.CATEGORY_PUZZLE,  # Головоломки
     'CATEGORY_RACING': EGSCategory.CATEGORY_RACING,  # Гонки
