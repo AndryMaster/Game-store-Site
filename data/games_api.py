@@ -23,13 +23,13 @@ class GamesResource(Resource):
             'price': game.to_dict(only=('original_price', 'discount_price', 'discount')),
             'image_urls': game.get_img_urls()}})
 
-    def delete(self, game_id):
-        session = db_session.create_session()
-        game = abort_if_game_not_found(game_id)
-        if not game.is_open:
-            session.delete(game)
-            session.commit()
-        return jsonify({'success': 'OK'})
+    # def delete(self, game_id):
+    #     session = db_session.create_session()
+    #     game = abort_if_game_not_found(game_id)
+    #     if not game.is_open:
+    #         session.delete(game)
+    #         session.commit()
+    #     return jsonify({'success': 'OK'})
 
 
 class GamesListResource(Resource):
@@ -57,27 +57,27 @@ class GamesListResource(Resource):
             'price': game.to_dict(only=('original_price', 'discount_price', 'discount')),
             'image_urls': game.get_img_urls()} for game in games]})
 
-    def post(self):
-        args = parser_post_games.parse_args()
-        session = db_session.create_session()
-        game = session.query(Games).filter(Games.title == args['title']).first()
-        if not game:
-            try:
-                game = Games(
-                    title=args['title'],
-                    original_price=args['original_price'],
-                    discount=args['discount'],
-                    discount_price=args['discount_price'],
-                    developer_name=args['developer_name'],
-                    user_id=1)
-                game.set_img_urls(args['image_urls'])
-                game.set_published_date(args['published_date'])
-
-                session.add(game)
-                session.commit()
-                return jsonify({'success': 'OK'})
-            except:
-                return jsonify({'error': 'wrong input data'})
+    # def post(self):
+    #     args = parser_post_games.parse_args()
+    #     session = db_session.create_session()
+    #     game = session.query(Games).filter(Games.title == args['title']).first()
+    #     if not game:
+    #         try:
+    #             game = Games(
+    #                 title=args['title'],
+    #                 original_price=args['original_price'],
+    #                 discount=args['discount'],
+    #                 discount_price=args['discount_price'],
+    #                 developer_name=args['developer_name'],
+    #                 user_id=1)
+    #             game.set_img_urls(args['image_urls'])
+    #             game.set_published_date(args['published_date'])
+    #
+    #             session.add(game)
+    #             session.commit()
+    #             return jsonify({'success': 'OK'})
+    #         except:
+    #             return jsonify({'error': 'wrong input data'})
 
 
 parser_filter_games = reqparse.RequestParser()

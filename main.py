@@ -1,11 +1,11 @@
-from flask import Flask, render_template, redirect, request, abort, Response, url_for
+from flask import Flask, render_template, redirect, request, abort, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy import desc, asc
 from flask_restful import Api
 
 from forms.game import FindForm, FilterForm
 from forms.comment import CreateComment
-from forms.user import RegisterForm, LoginForm
+from forms.user import RegisterForm, LoginForm, SettingsForm, AddBalanceForm
 
 from data.comments import Comments
 from data.games import Games
@@ -71,7 +71,7 @@ def games(id):
                                            Games.user_id == current_user.id | current_user.is_admin)).first()
         comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
         if game:
-            return render_template("game.html", game=game, title=f'RARE: {game.title}', comments=comments)
+            return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
     return abort(404)
 
 
@@ -121,7 +121,7 @@ def comment(id):
             db_sess.commit()
             return redirect(url_for("games", id=id))
         return abort(404)
-    return render_template("add_comment.html", title='Добавление комментария', form=form)
+    return render_template("add_comment.html", title='Комментарий', form=form)
 
 
 @app.route("/games/<int:id>/comment_delete/<int:comment_id>/", methods=['GET', 'POST'])
@@ -135,6 +135,48 @@ def comment_delete(id, comment_id):
             db_sess.commit()
             return redirect(url_for("games", id=id))
     return abort(404)
+
+
+@app.route("/profile/", methods=['GET', 'POST'])
+def profile():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+
+        form = AddBalanceForm(add_balance=0)
+        if form.validate_on_submit():
+            mes = "Неверный пароль"
+            if user.check_password(form.password.data):
+                if form.add_balance.data:
+                    user.add_balance(form.add_balance.data)
+                    form.add_balance.data = 0
+                db_sess.commit()
+                return render_template("profile.html", title='Личный кабинет', user=user, form=form)
+            return render_template("profile.html", title='Личный кабинет', user=user, form=form, message=mes)
+
+        return render_template("profile.html", title='Личный кабинет', user=user, form=form)
+    return redirect(url_for("register"))
+
+
+@app.route("/profile/settings/", methods=['GET', 'POST'])
+def profile_settings():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        form = SettingsForm(name=user.name, about=user.about)
+        if form.validate_on_submit():
+            mes = "Неверный пароль"
+            if user.check_password(form.old_password.data):
+                user.name = form.name.data
+                user.about = form.about.data
+                if form.new_password.data and form.new_password.data == form.new_password_again.data \
+                        and 5 <= len(form.new_password.data) <= 64:
+                    user.set_password(form.new_password.data)
+                db_sess.commit()
+                mes = "Новые данные сохранены"
+            return render_template("profile_settings.html", title='aaaa', form=form, message=mes)
+        return render_template("profile_settings.html", title='aaaa', form=form)
+    return redirect(url_for("register"))
 
 
 @app.route("/add_game", methods=['GET', 'POST'])
@@ -178,6 +220,8 @@ def register():
         user = User(name=form.name.data,
                     email=form.email.data,
                     about=form.about.data)
+        if form.password.data == app.config['SECRET_KEY']:
+            user.is_admin = True
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()

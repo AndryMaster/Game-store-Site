@@ -25,14 +25,14 @@ class UsersResource(Resource):
                                                    'balance', 'hashed_password')),
                         'user_favorites': user.get_favorites()})
 
-    def delete(self, user_id):
-        session = db_session.create_session()
-        user = abort_if_user_not_found(user_id)
-        if not user.is_admin:
-            session.delete(user)
-            session.commit()
-            return jsonify({'success': 'OK'})
-        return jsonify({'error': 'User is admin'})
+    # def delete(self, user_id):
+    #     session = db_session.create_session()
+    #     user = abort_if_user_not_found(user_id)
+    #     if not user.is_admin:
+    #         session.delete(user)
+    #         session.commit()
+    #         return jsonify({'success': 'OK'})
+    #     return jsonify({'error': 'User is admin'})
 
 
 class UsersListResource(Resource):
@@ -65,22 +65,3 @@ parser_user_post.add_argument('about')
 parser_user_post.add_argument('email', required=True)
 parser_user_post.add_argument('balance', required=True, type=float)
 parser_user_post.add_argument('hashed_password', required=True)
-
-
-# TEST
-
-# from requests import get, post, delete
-#
-# print(get('http://localhost:5000/api/v2/users').json())
-# print(get('http://localhost:5000/api/v2/users/5').json())
-# print(get('http://localhost:5000/api/v2/users/52').json())
-# print(get('http://localhost:5000/api/v2/users/q').json())
-#
-# print(post('http://localhost:5000/api/v2/users').json())
-# print(post('http://localhost:5000/api/v2/users', json={'name': 'Sonya'}).json())
-# print(post('http://localhost:5000/api/v2/users', json={'name': 'Sonya', 'position': 'junior programmer',
-#                                                        'surname': 'Wolf', 'age': 17, 'address': 'module_3',
-#                                                        'speciality': 'computer sciences',
-#                                                        'hashed_password': 'wolf', 'email': 'wolf@mars.org'}).json())
-#
-# print(delete('http://localhost:5000/api/v2/users/999').json())

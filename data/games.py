@@ -3,9 +3,10 @@ import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
+from __all_models import Model
 
 
-class Games(SqlAlchemyBase, SerializerMixin):
+class Games(SqlAlchemyBase, SerializerMixin, Model):
     __tablename__ = 'games'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -47,14 +48,14 @@ class Games(SqlAlchemyBase, SerializerMixin):
         if self.is_open:
             self.rating += delta_rating
 
-    @staticmethod
-    def value_to_str(value, is_total=False):
-        if isinstance(value, int) or isinstance(value, float):
-            if round(value, 2) or is_total:
-                return f"{value:0.2f} ₽"
-            else:
-                return "Бесплатно"
-        # raise TypeError("Неправильный тип для валюты!")
+    # @staticmethod
+    # def value_to_str(value, is_total=False):
+    #     if isinstance(value, int) or isinstance(value, float):
+    #         if round(value, 2) or is_total:
+    #             return f"{value:0.2f} ₽"
+    #         else:
+    #             return "Бесплатно"
+    #     # raise TypeError("Неправильный тип для валюты!")
 
     def __repr__(self):
         return f'<Game_{self.id}> "{self.title}"'
