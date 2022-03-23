@@ -2,37 +2,17 @@
 <meta charset="UTF-8">
 
 {% block content %}
-<style>
-  .grey {color: #707070;}
-</style>
-
 <h1>Пользователь: {{ user.name }}</h1>
 <h5 class="grey">id: {{ user.id }}</h5><br>
 
-<h3>Баланс: <b>{{ user.balance }}</b></h3>
-<form action="" method="post">
-  {{ form.hidden_tag() }}
-  <div class="form-group row">
-    {{ form.add_balance.label(class="col-sm-3 col-form-label") }}
-	  <div class="col-sm-15">{{ form.add_balance(class="form-control") }}</div><br>
-    {% for error in form.add_balance.errors %}
-      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
-	<div class="form-group row">
-    {{ form.password.label(class="col-sm-3 col-form-label") }}
-		<div class="col-sm-15">{{ form.password(class="form-control", type="password") }}</div><br>
-    {% for error in form.password.errors %}
-			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
-  <div class="form-group row col-sm-10">{{ form.submit(type="submit", class="btn btn-warning") }}</div>
-  {{message}}
-</form>
+<h3>Баланс: <b>{{ user.value_to_str(user.balance, is_total=True) }}</b></h3>
+<a class="btn btn-warning" href="/add_balance">Пополнить баланс</a>
 
 <p><br>
 Информация:<br>
 Статус: {% if current_user.is_admin %} Администратор {% else %} Пользователь {% endif %}<br>
 Почта {{ user.email }}<br>
-Дата регистрации {{ user.created_date }}<br>
+Дата регистрации {{ user.date_to_str(user.created_date) }}<br>
 {% if current_user.about %}О пользователе: {{ user.about }}{% endif %}
 </p><br>
 
@@ -50,4 +30,3 @@
 </p>
 
 {% endblock %}
-

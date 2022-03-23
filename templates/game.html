@@ -36,8 +36,8 @@
 </h3>
 
 <h4>Разработчик: {{ game.developer_name }}<br>
-    Дата создания: {{ game.published_date }}<br>
-    Дата публикации:  {{ game.placement_date }}</h4><br>
+    Дата создания: {{ game.date_to_str(game.published_date) }}<br>
+    Дата публикации:  {{ game.date_to_str(game.placement_date) }}</h4><br>
 
 {% if current_user.is_authenticated %}
   <!--  Buttons  -->
@@ -49,8 +49,10 @@
   {% else %}
     <p>
       <a class="btn btn-success" href="/games/{{ game.id }}/comment/">Добавить комментарий</a>
-      <a class="btn btn-primary" href="/games/{{ game.id }}/add_favorites/">Добавить в избранное</a>
-      <a class="btn btn-warning" href="/games/{{ game.id }}/add_basket/">Добавить в корзину</a>
+      <a class="btn btn-primary" href="/games/{{ game.id }}/favorites/">
+	        {% if game.id in current_user.get_favorites() %}В избранном{% else %}Добавить в избранное{% endif %}</a>
+      <a class="btn btn-warning" href="/games/{{ game.id }}/basket/">
+	        {% if game.id in current_user.get_basket() %}В корзине{% else %}Добавить в корзину{% endif %}</a>
       {% if current_user.is_admin %}
         <a class="btn btn-danger" href="/games/{{ game.id }}/delete/">Удалить из магазина</a>
       {% endif %}
@@ -66,10 +68,10 @@
       Оценка: {{ comment.rating }}/10
     </div>
     <div>
-      Дата: {{ comment.published_date }}
+      Дата: {{ comment.date_to_str(comment.published_date) }}
     </div>
     <div>
-      Описание (содержание): {{ comment.content }}
+      Описание игры: {{ comment.content }}
     </div>
     {% if current_user.is_authenticated and (current_user == comment.user or current_user.is_admin) %}
       <p>

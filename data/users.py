@@ -5,7 +5,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
-from __all_models import Model
+from .model import Model
 
 
 class User(SqlAlchemyBase, UserMixin, SerializerMixin, Model):
@@ -20,9 +20,9 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin, Model):
     balance = sqlalchemy.Column(sqlalchemy.Float, default=0.0)
     is_admin = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
 
-    user_favorites = sqlalchemy.Column(sqlalchemy.String(), nullable=True)   # ++orm.relationship
-    user_basket = sqlalchemy.Column(sqlalchemy.String(), nullable=True)      # ++orm.relationship
-    user_library = sqlalchemy.Column(sqlalchemy.String(), nullable=True)     # ++orm.relationship
+    user_favorites = sqlalchemy.Column(sqlalchemy.String(), default='')   # ++orm.relationship
+    user_basket = sqlalchemy.Column(sqlalchemy.String(), default='')      # ++orm.relationship
+    user_library = sqlalchemy.Column(sqlalchemy.String(), default='')     # ++orm.relationship
 
     games = orm.relation("Games", back_populates='user')
     comments = orm.relationship("Comments", back_populates='user')
@@ -39,20 +39,56 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin, Model):
     def add_balance(self, money):
         self.balance += money
 
+    # favorites
     def set_favorites(self, favorites: list):
-        self.user_favorites = ';'.join(favorites)
+        self.user_favorites = ';'.join([str(item_id) for item_id in set(favorites)])
 
-    def get_favorites(self):
-        return self.user_favorites.split(';')
+    def get_favorites(self) -> list:
+        return [int(item_id) for item_id in self.user_favorites.split(';') if item_id]
 
+    def add_favorites(self, item_id):
+        favorites = self.get_favorites()
+        favorites.append(item_id)
+        self.set_favorites(favorites)
+
+    def del_favorites(self, item_id):
+        favorites = self.get_favorites()
+        if item_id in favorites:
+            favorites.remove(item_id)
+            self.set_favorites(favorites)
+
+    # basket
     def set_basket(self, basket: list):
-        self.user_basket = ';'.join(basket)
+        self.user_basket = ';'.join([str(item_id) for item_id in set(basket)])
 
-    def get_basket(self):
-        return self.user_basket.split(';')
+    def get_basket(self) -> list:
+        return [int(item_id) for item_id in self.user_basket.split(';') if item_id]
 
+    def add_basket(self, item_id):
+        basket = self.get_basket()
+        basket.append(item_id)
+        self.set_basket(basket)
+
+    def del_basket(self, item_id):
+        basket = self.get_basket()
+        if item_id in basket:
+            basket.remove(item_id)
+            self.set_basket(basket)
+
+    # library
     def set_library(self, library: list):
-        self.user_library = ';'.join(library)
+        self.user_library = ';'.join([str(item_id) for item_id in set(library)])
 
-    def get_library(self):
-        return self.user_library.split(';')
+    def get_library(self) -> list:
+        return [int(item_id) for item_id in self.user_library.split(';') if item_id]
+
+    def add_library(self, item_id):
+        library = self.get_library()
+        library.append(item_id)
+        self.set_library(library)
+
+    # def del_library(self, item_id):
+    #     library = self.get_library()
+    #     if item_id in library:
+    #         library.remove(item_id)
+    #         self.set_library(library)

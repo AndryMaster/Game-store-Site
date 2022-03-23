@@ -14,8 +14,8 @@ class SettingsForm(FlaskForm):
 
 class AddBalanceForm(FlaskForm):
     password = PasswordField('Подтвердите действие паролем:', validators=[DataRequired()])
-    add_balance = FloatField('Пополнить счёт на сумму:', validators=[DataRequired(), number_range(min=1, max=3_000,
-                                                         message='Вы ввели отрицательную или слишклм большую сумму')])
+    add_balance = FloatField('Пополнить счёт на сумму:', validators=[DataRequired(), number_range(min=0, max=3_000,
+                                                         message='Вы ввели отрицательную или слишком большую сумму')])
     submit = SubmitField('Пополнить')
 
 

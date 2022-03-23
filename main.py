@@ -102,26 +102,30 @@ def games_delete(id):
 
 @app.route("/games/<int:id>/comment/", methods=['GET', 'POST'])
 def comment(id):
-    form = CreateComment()
-    if form.validate_on_submit():
-        if current_user.is_authenticated:
-            db_sess = db_session.create_session()
-            comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
+        if comment:
+            form = CreateComment(rating=comment.rating, content=comment.content)
+        else:
+            form = CreateComment()
+
+        if form.validate_on_submit():
             if not comment:
                 comment = Comments(game_id=id, user_id=current_user.id,
                                    rating=form.rating.data,
                                    content=form.content.data)
-                db_sess.query(Games).get(id).add_rating(10 + form.rating.data)
+                add_rating_to_game(game_id=id, rating=10 + form.rating.data)
                 db_sess.add(comment)
             else:
-                db_sess.query(Games).get(id).add_rating(form.rating.data - comment.rating)
+                add_rating_to_game(game_id=id, rating=form.rating.data - comment.rating)
                 comment.rating = form.rating.data
                 comment.content = form.content.data
                 comment.update_date()
             db_sess.commit()
             return redirect(url_for("games", id=id))
-        return abort(404)
-    return render_template("add_comment.html", title='Комментарий', form=form)
+        return render_template("add_comment.html", title='Комментарий', form=form)
+    return abort(404)
 
 
 @app.route("/games/<int:id>/comment_delete/<int:comment_id>/", methods=['GET', 'POST'])
@@ -130,11 +134,41 @@ def comment_delete(id, comment_id):
         db_sess = db_session.create_session()
         comment = db_sess.query(Comments).get(comment_id)
         if comment and (comment.user_id == current_user.id or current_user.is_admin) and comment.game_id == id:
-            db_sess.query(Games).get(id).add_rating(-(10 + comment.rating))
+            add_rating_to_game(game_id=id, rating=-10 - comment.rating)
             db_sess.delete(comment)
             db_sess.commit()
             return redirect(url_for("games", id=id))
     return abort(404)
+
+
+@app.route("/games/<int:id>/favorites/", methods=['GET', 'POST'])
+def favorites(id):
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        if id not in user.get_favorites():
+            user.add_favorites(id)
+            add_rating_to_game(game_id=id, rating=10)
+        else:
+            user.del_favorites(id)
+            add_rating_to_game(game_id=id, rating=-10)
+        db_sess.commit()
+    return redirect(url_for("games", id=id))
+
+
+@app.route("/games/<int:id>/basket/", methods=['GET', 'POST'])
+def basket(id):
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        if id not in user.get_basket():
+            user.add_basket(id)
+            add_rating_to_game(game_id=id, rating=15)
+        else:
+            user.del_basket(id)
+            add_rating_to_game(game_id=id, rating=-15)
+        db_sess.commit()
+    return redirect(url_for("games", id=id))
 
 
 @app.route("/profile/", methods=['GET', 'POST'])
@@ -142,19 +176,7 @@ def profile():
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         user = db_sess.query(User).get(current_user.id)
-
-        form = AddBalanceForm(add_balance=0)
-        if form.validate_on_submit():
-            mes = "Неверный пароль"
-            if user.check_password(form.password.data):
-                if form.add_balance.data:
-                    user.add_balance(form.add_balance.data)
-                    form.add_balance.data = 0
-                db_sess.commit()
-                return render_template("profile.html", title='Личный кабинет', user=user, form=form)
-            return render_template("profile.html", title='Личный кабинет', user=user, form=form, message=mes)
-
-        return render_template("profile.html", title='Личный кабинет', user=user, form=form)
+        return render_template("profile.html", title='Личный кабинет', user=user)
     return redirect(url_for("register"))
 
 
@@ -169,13 +191,30 @@ def profile_settings():
             if user.check_password(form.old_password.data):
                 user.name = form.name.data
                 user.about = form.about.data
-                if form.new_password.data and form.new_password.data == form.new_password_again.data \
-                        and 5 <= len(form.new_password.data) <= 64:
+                if form.new_password.data and 5 <= len(form.new_password.data) <= 64 \
+                        and form.new_password.data == form.new_password_again.data:
                     user.set_password(form.new_password.data)
                 db_sess.commit()
                 mes = "Новые данные сохранены"
-            return render_template("profile_settings.html", title='aaaa', form=form, message=mes)
-        return render_template("profile_settings.html", title='aaaa', form=form)
+            return render_template("profile_settings.html", title='Настройки профиля', form=form, message=mes)
+        return render_template("profile_settings.html", title='Настройки профиля', form=form)
+    return redirect(url_for("register"))
+
+
+@app.route("/add_balance/", methods=['GET', 'POST'])
+def add_balance():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        form = AddBalanceForm()
+        if form.validate_on_submit():
+            if user.check_password(form.password.data) and form.add_balance.data:
+                user.add_balance(form.add_balance.data)
+                db_sess.commit()
+                return redirect(url_for("profile"))
+            return render_template("add_balance.html", title='Пополнить баланс', user=user,
+                                   form=form, message="Неверный пароль или сумма")
+        return render_template("add_balance.html", title='Пополнить баланс', user=user, form=form)
     return redirect(url_for("register"))
 
 
@@ -215,12 +254,10 @@ def register():
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Регистрация', form=form, message="Такой пользователь уже есть")
-        if form.password.data != form.password_again.data:
-            return render_template('register.html', title='Регистрация', form=form, message="Пароли не совпадают")
         user = User(name=form.name.data,
                     email=form.email.data,
                     about=form.about.data)
-        if form.password.data == app.config['SECRET_KEY']:
+        if form.password.data == app.config['SECRET_KEY']:  # admin
             user.is_admin = True
         user.set_password(form.password.data)
         db_sess.add(user)
@@ -241,7 +278,13 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect(url_for("store"))
         return render_template("login.html", message="Неправильный логин или пароль", form=form)
-    return render_template("login.html", title='Авторизация', form=form)
+    return render_template("login.html", title="Авторизация", form=form)
+
+
+def add_rating_to_game(game_id, rating):
+    db_sess = db_session.create_session()
+    db_sess.query(Games).get(game_id).add_rating(rating)
+    db_sess.commit()
 
 
 def add_game(data, user_id=0):

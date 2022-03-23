@@ -2,7 +2,7 @@ import datetime
 import sqlalchemy
 from sqlalchemy import orm
 from .db_session import SqlAlchemyBase
-from __all_models import Model
+from .model import Model
 
 
 class Comments(SqlAlchemyBase, Model):
