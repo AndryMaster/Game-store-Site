@@ -19,6 +19,12 @@ login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key'
 api = Api(app)
 
+content_type = {
+    1: 'Избранное',
+    2: 'Корзина',
+    3: 'Библиотека'
+}
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -60,7 +66,7 @@ def store():
                                                 ).order_by(Games.id).offset(start).limit(count).all()
         else:
             games = db_sess.query(Games).filter(Games.is_open).order_by(Games.id).offset(start).limit(count).all()
-    return render_template("index.html", games=games, title='RARE Games Store')
+    return render_template("store.html", games=games, title='RARE Games Store')
 
 
 @app.route("/games/<int:id>/")
@@ -75,7 +81,7 @@ def games(id):
     return abort(404)
 
 
-@app.route("/games/<int:id>/open/", methods=['GET', 'POST'])
+@app.route("/games/<int:id>/open/")
 def games_open(id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
@@ -88,7 +94,7 @@ def games_open(id):
     return abort(404)
 
 
-@app.route("/games/<int:id>/delete/", methods=['GET', 'POST'])
+@app.route("/games/<int:id>/delete/")
 def games_delete(id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
@@ -128,7 +134,7 @@ def comment(id):
     return abort(404)
 
 
-@app.route("/games/<int:id>/comment_delete/<int:comment_id>/", methods=['GET', 'POST'])
+@app.route("/games/<int:id>/comment_delete/<int:comment_id>/")
 def comment_delete(id, comment_id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
@@ -141,8 +147,45 @@ def comment_delete(id, comment_id):
     return abort(404)
 
 
-@app.route("/games/<int:id>/favorites/", methods=['GET', 'POST'])
-def favorites(id):
+@app.route("/profile/favorites/")
+def favorites():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        games = db_sess.query(Games).filter(Games.id.in_(user.get_favorites())).all()
+        return render_template("store_profile_content.html", content=content_type,
+                               variant=1, games=games, title=content_type[1])
+    return abort(404)
+
+
+@app.route("/profile/basket/")
+def basket():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        games = db_sess.query(Games).filter(Games.id.in_(user.get_basket())).all()
+        args = {'price': sum([game.original_price for game in games]),
+                'discount': sum([game.discount for game in games]),
+                'total_price': sum([game.discount_price for game in games]),
+                'mes': request.args.get('mes', '')}
+        return render_template("store_profile_content.html", content=content_type,
+                               variant=2, games=games, title=content_type[2], args=args)
+    return abort(404)
+
+
+@app.route("/profile/library/")
+def library():
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        games = db_sess.query(Games).filter(Games.id.in_(user.get_library())).all()
+        return render_template("store_profile_content.html", content=content_type,
+                               variant=3, games=games, title=content_type[3])
+    return abort(404)
+
+
+@app.route("/games/<int:id>/favorites/")
+def set_favorites(id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         user = db_sess.query(User).get(current_user.id)
@@ -156,8 +199,8 @@ def favorites(id):
     return redirect(url_for("games", id=id))
 
 
-@app.route("/games/<int:id>/basket/", methods=['GET', 'POST'])
-def basket(id):
+@app.route("/games/<int:id>/basket/")
+def set_basket(id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
         user = db_sess.query(User).get(current_user.id)
@@ -169,6 +212,25 @@ def basket(id):
             add_rating_to_game(game_id=id, rating=-15)
         db_sess.commit()
     return redirect(url_for("games", id=id))
+
+
+@app.route("/buy_games/<int:user_id>/")
+def set_library(user_id):
+    if current_user.is_authenticated and user_id == current_user.id:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        games = db_sess.query(Games).filter(Games.id.in_(user.get_basket())).all()
+        total_price = sum([game.discount_price for game in games])
+        mes = 'Ошибка: Недостаточно средств!'
+        if user.balance >= total_price:
+            [user.add_library(game.id) for game in games]
+            [user.del_basket(game.id) for game in games]
+            [add_rating_to_game(game_id=game.id, rating=25) for game in games]
+            user.balance -= total_price
+            db_sess.commit()
+            mes = 'Покупка совершена успешно!'
+        return redirect(url_for("basket", mes=mes))
+    return abort(404)
 
 
 @app.route("/profile/", methods=['GET', 'POST'])

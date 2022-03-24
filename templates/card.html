@@ -1,0 +1,39 @@
+<style>
+  .tall_img {
+    width: 256px;
+    height: 284px;
+
+    border: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .tall_img img {
+    height: 100%;
+    width: auto;
+  }
+</style>
+
+<div class="col-md6 border rounded">
+  <h2>{% if not game.is_open %}*{% endif %}{{ game.title }}</h2>
+  <div class="tall_img">
+    <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
+  </div>
+  <div>
+    <b>
+	    {% if current_user.is_authenticated and game.id in current_user.get_library() %}
+	      <a class="no_effect" href="{{ url_for('static', filename='txt/game.txt') }}" download>Скачать</a>
+	    {% else %}
+		    {% if game.discount %}
+		      Скидка {{ game.discount * 100 // game.original_price }}%
+		      <s>{{ game.value_to_str(game.original_price) }}</s>
+		    {% endif %}
+		    {{ game.value_to_str(game.discount_price) }}
+	    {% endif %}
+    </b>
+  </div>
+  <div>
+    Издатель - {{ game.developer_name }}, Дата издания - {{ game.date_to_str(game.published_date) }}
+  </div>
+</div>

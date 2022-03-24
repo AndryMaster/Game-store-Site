@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Сисок игр</h1>
+
+{% if current_user.is_authenticated %}
+	<br>
+	<a href="/add_game" class="btn btn-secondary">Предложить игру</a>
+	<a href="/filter" class="btn btn-secondary">Задать фильтр</a>
+	<br>
+{% endif %}
+
+{% if not games %}
+ <h2 align="center">Пока пусто!</h2>
+{% endif %}
+
+{% for game in games %}
+	<br>
+	<a class="no_effect" href="/games/{{  game.id  }}">
+	  {% include 'card.html' %}
+	</a>
+{% endfor %}
+
+{% endblock %}
