@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-<meta charset="UTF-8">
 
 <!--Categories-->
 {% set Categories = [('CATEGORY_SINGLE_PLAYER', 'Синглплеер'), ('CATEGORY_MULTIPLAYER', 'Мультиплеер'),
@@ -12,12 +11,12 @@
 <h1>Добавление новых игр</h1><br>
 <form action="" method="post">
   {{ form.hidden_tag() }}
-	<div class="form-group row">
-    {{ form.keywords.label(class="col-sm-2 col-form-label") }}
-	  <div class="col-sm-15">{{ form.keywords(class="form-control") }}</div><br>
-    {% for error in form.keywords.errors %}
-      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+<!--	<div class="form-group row">-->
+<!--    {{ form.keywords.label(class="col-sm-2 col-form-label") }}-->
+<!--	  <div class="col-sm-15">{{ form.keywords(class="form-control") }}</div><br>-->
+<!--    {% for error in form.keywords.errors %}-->
+<!--      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}-->
+<!--  </div>-->
   <p>
   <label for="eduSelect">Категории и разделы игр:</label>
   <div class="form-group form-check">
@@ -28,19 +27,19 @@
   </div>
   </p>
 	<div class="form-group row">
-    {{ form.result_count.label(class="col-sm-4 col-form-label") }}
-		<div class="col-sm-15">{{ form.result_count(class="form-control") }}</div><br>
+    {{ form.result_count.label(class="col-xxs-10 col-xs-5 col-md-4 col-lg-3 col-form-label") }}
+		<div class="col-xs-2 col-md-3 col-lg-4">{{ form.result_count(class="form-control") }}</div><br>
     {% for error in form.result_count.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+  </div><br>
 	<div class="form-group row">
-    {{ form.select.label(class="col-sm-4 col-form-label") }}
-		<div class="col-sm-15">{{ form.select(class="form-control") }}</div><br>
+    {{ form.select.label(class="col-xxs-10 col-xs-5 col-md-4 col-lg-3 col-form-label") }}
+		<div class="col-xs-2 col-md-3 col-lg-4">{{ form.select(class="form-control") }}</div><br>
     {% for error in form.select.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+  </div><br>
 
-  <div class="form-group row col-sm-10">{{ form.submit(type="submit", class="btn btn-warning") }}</div>
+  <div class="form-group row col-xxs-5 col-xs-4 col-sm-3 col-lg-3">{{ form.submit(type="submit", class="btn btn-primary") }}</div>
   {{ message }}
 </form>
 {% endblock %}

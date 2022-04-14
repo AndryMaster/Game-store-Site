@@ -7,25 +7,25 @@
 <form action="" method="post">
   {{ form.hidden_tag() }}<br>
 	<div class="form-group row">
-    {{ form.select.label(class="col-sm-2 col-form-label") }}
-		<div class="col-sm-15">{{ form.select(class="form-control") }}</div><br>
+    {{ form.select.label(class="col-xxs-6 col-xs-4 col-md-3 col-lg-3 col-form-label") }}
+		<div class="col-md-6 col-lg-4">{{ form.select(class="form-control") }}</div><br>
     {% for error in form.select.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+  </div><br>
 
 	<div class="form-group row">
-    {{ form.price_start.label(class="col-sm-1 col-form-label") }}
-		<div class="col-sm-2">{{ form.price_start(class="form-control") }}</div>
-		{{ form.price_end.label(class="col-form-label") }}
-		<div class="col-sm-2">{{ form.price_end(class="form-control") }}</div><br>
+    {{ form.price_start.label(class="col-xxs-10 col-xs-5 col-md-2 col-lg-2 col-form-label") }}
+		<div class="col-md-2">{{ form.price_start(class="form-control") }}</div>
+		{{ form.price_end.label(class="col-xxs-10 col-xs-5 col-md-2 col-lg-1 col-form-label") }}
+		<div class="col-md-2">{{ form.price_end(class="form-control") }}</div><br>
 
 		{% for error in form.price_start.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
 	  {% for error in form.price_end.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+  </div><br>
 
-  <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+	<div class="form-group row col-xxs-5 col-xs-4 col-sm-3 col-lg-3">{{ form.submit(type="submit", class="btn btn-primary") }}</div>
   {{ message }}
 
 </form>

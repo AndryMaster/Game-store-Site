@@ -64,6 +64,21 @@ p {
     font-size: 14pt;
 }
 
+.wide_img {
+    width: 480px;
+    height: 270px;
+
+    border: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .wide_img img {
+    height: 100%;
+    width: auto;
+  }
+
 /*:hover :active*/
 /*background-image: linear-gradient(180deg, transparent 65%, #5bf 65%); for btn*/
 

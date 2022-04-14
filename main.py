@@ -49,7 +49,9 @@ def store():
     db_sess = db_session.create_session()
     start = request.args.get('start') if request.args.get('start') else 0
     count = request.args.get('count') if request.args.get('count') else 12
-    if request.args.get('search') and current_user.is_authenticated and request.args.get('sort') in ['desk', 'ask']:
+    search = f"%{request.args.get('search_text').lower()}%" if request.args.get('search_text') else False
+    if request.args.get('search') and current_user.is_authenticated and\
+            request.args.get('sort') in ['desk', 'ask'] and not search:
         try:
             sort_item = {'price': Games.discount_price, 'rating': Games.rating,
                          'date': Games.placement_date}[request.args.get('sort_by')]
@@ -58,6 +60,14 @@ def store():
                                                 Games.discount_price <= request.args.get('pend')
                                                 ).order_by(desc(sort_item) if request.args.get('sort') == 'desk' else
                                                            asc(sort_item), Games.id).offset(start).limit(count).all()
+        except:
+            return redirect(url_for("store"))
+    elif search:
+        try:
+            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin
+                                                if current_user.is_authenticated else Games.is_open,
+                                                Games.title.ilike(search) | Games.developer_name.ilike(search)
+                                                ).order_by(Games.title).offset(start).limit(count).all()
         except:
             return redirect(url_for("store"))
     else:
@@ -194,10 +204,10 @@ def set_favorites(id):
         user = db_sess.query(User).get(current_user.id)
         if id not in user.get_favorites():
             user.add_favorites(id)
-            add_rating_to_game(game_id=id, rating=10)
+            add_rating_to_game(game_id=id, rating=5)
         else:
             user.del_favorites(id)
-            add_rating_to_game(game_id=id, rating=-10)
+            add_rating_to_game(game_id=id, rating=-5)
         db_sess.commit()
     return redirect(url_for("games", id=id))
 
@@ -209,10 +219,10 @@ def set_basket(id):
         user = db_sess.query(User).get(current_user.id)
         if id not in user.get_basket():
             user.add_basket(id)
-            add_rating_to_game(game_id=id, rating=15)
+            add_rating_to_game(game_id=id, rating=10)
         else:
             user.del_basket(id)
-            add_rating_to_game(game_id=id, rating=-15)
+            add_rating_to_game(game_id=id, rating=-10)
         db_sess.commit()
     return redirect(url_for("games", id=id))
 
@@ -301,8 +311,17 @@ def add_games():
     return render_template("add_game.html", title='Добавление игры', form=form)
 
 
+@app.route("/search", methods=['POST'])
+def search():
+    search_text = request.form['search_text']
+    # print(search_text)
+    if search_text:
+        return redirect(url_for("store", search_text=search_text))
+    return redirect(url_for("store"))
+
+
 @app.route("/filter", methods=['GET', 'POST'])
-def filter():
+def game_filter():
     form = FilterForm()
     if form.validate_on_submit():
         return redirect(url_for("store", search=1,

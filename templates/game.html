@@ -2,22 +2,6 @@
 <meta charset="UTF-8">
 
 {% block content %}
-<style>
-  .wide_img {
-    width: 480px;
-    height: 270px;
-
-    border: 0;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .wide_img img {
-    height: 100%;
-    width: auto;
-  }
-</style>
 
 <h1>{{ game.title }}</h1>
 
@@ -65,6 +49,7 @@
 {% endif %}
 
 <h2>Комментарии</h2>
+<!--<div class="col-md6 border rounded">-->
 {% for comment in comments %}
   <div class="col-md6 border rounded">
     <h2>{{ comment.user.name }}</h2>
@@ -85,5 +70,6 @@
     {% endif %}
   </div>
 {% endfor %}
+<!--</div>-->
 
 {% endblock %}

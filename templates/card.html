@@ -1,8 +1,7 @@
-<div class="col py-3">
+<div class="col py-3" xmlns="http://www.w3.org/1999/html">
 <div class="card h-100 border-secondary">
 
 	<a class="no_effect" href="/games/{{  game.id  }}">
-		{% if not game.is_open %}<div class="card-header" style="background-color: lightsalmon;">Ограниченный доступ</div>{% endif %}
 		<img src="{{ game.get_img_urls()['Tall'] }}" class="card-img-top" alt="Скриншот">
 	</a>
 
@@ -24,10 +23,15 @@
 	    </b><br>
     </p>
   </div>
-	<!--<a class="btn btn-primary" style="vert-align: bottom;" href="/games/{{  game.id  }}">Обзор</a>-->
+
+	{% if not game.is_open %}
+	<div class="card-footer" style="background-color: dodgerblue;">
+		<small class="text-white">Ограниченный доступ</small>
+	</div>
+	{% else %}
 	<div class="card-footer">
 		<small class="text-muted">Дата издания - {{ game.date_to_str(game.published_date) }}</small>
-	</div>
+	</div>{% endif %}
 
 </div>
 </div>

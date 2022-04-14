@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, length, EqualTo, number_range
 
 
 class SettingsForm(FlaskForm):
-    name = StringField('Имя пользователя', validators=[DataRequired(), length(min=4, max=25)])
+    name = StringField('Имя пользователя', validators=[DataRequired(), length(min=5, max=25)])
     new_password = PasswordField('Ноывй пароль', validators=[EqualTo('new_password_again')])
     new_password_again = PasswordField('Повторите новый пароль')
     about = TextAreaField("Немного о себе", validators=[length(max=256)])

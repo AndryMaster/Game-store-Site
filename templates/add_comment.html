@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Комментарий</h1>
-  <form action="" method="post">
-      {{ form.hidden_tag() }}
+<h1>Комментарий</h1>
+<form action="" method="post">
+	{{ form.hidden_tag() }}
 
 	<div class="form-group row">
-    {{ form.rating.label(class="col-sm-3 col-form-label") }}
-	  <div class="col-sm-15">{{ form.rating(class="form-control") }}</div><br>
-    {% for error in form.rating.errors %}
-      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+	  {{ form.rating.label(class="col-xxs-10 col-xs-6 col-md-4 col-lg-3 col-form-label") }}
+	  <div class="col-xs-3 col-md-4 col-lg-5">{{ form.rating(class="form-control") }}</div><br>
+	  {% for error in form.rating.errors %}
+	    <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+	</div><br>
 
 	<div class="form-group row">
-    {{ form.content.label(class="col-sm-3 col-form-label") }}
-		<div class="col-sm-15">{{ form.content(class="form-control", placeholder="Содержание") }}</div><br>
-    {% for error in form.content.errors %}
+	  {{ form.content.label(class="col-xxs-10 col-xs-6 col-md-4 col-lg-3 col-form-label") }}
+		<div class="col-xs-3 col-md-4 col-lg-5">{{ form.content(class="form-control", placeholder="Содержание") }}</div><br>
+	  {% for error in form.content.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div>
+	</div><br>
 
-	<div class="form-group row col-sm-10">{{ form.submit(type="submit", class="btn btn-warning") }}</div>
+	<div class="form-group row col-xxs-5 col-xs-4 col-sm-3 col-lg-3">{{ form.submit(type="submit", class="btn btn-warning") }}</div>
 	{{message}}
-  </form>
+</form>
 {% endblock %}
