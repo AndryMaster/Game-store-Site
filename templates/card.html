@@ -1,39 +1,33 @@
-<style>
-  .tall_img {
-    width: 256px;
-    height: 284px;
+<div class="col py-3">
+<div class="card h-100 border-secondary">
 
-    border: 0;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .tall_img img {
-    height: 100%;
-    width: auto;
-  }
-</style>
+	<a class="no_effect" href="/games/{{  game.id  }}">
+		{% if not game.is_open %}<div class="card-header" style="background-color: lightsalmon;">Ограниченный доступ</div>{% endif %}
+		<img src="{{ game.get_img_urls()['Tall'] }}" class="card-img-top" alt="Скриншот">
+	</a>
 
-<div class="col-md6 border rounded">
-  <h2>{% if not game.is_open %}*{% endif %}{{ game.title }}</h2>
-  <div class="tall_img">
-    <img src="{{ game.get_img_urls()['Tall'] }}" alt="Скриншот" width="200">
-  </div>
-  <div>
-    <b>
-	    {% if current_user.is_authenticated and game.id in current_user.get_library() %}
-	      <a class="no_effect" href="{{ url_for('static', filename='txt/game.txt') }}" download>Скачать</a>
-	    {% else %}
-		    {% if game.discount %}
-		      Скидка {{ game.discount * 100 // game.original_price }}%
-		      <s>{{ game.value_to_str(game.original_price) }}</s>
+	<div class="card-body">
+	  <h3 class="card-title">{{ game.title }}</h3>
+		{% if game.developer_name %}
+		<h5 class="card-subtitle mb-3 text-muted">{{ game.developer_name }}</h5>{% endif %}
+    <p class="card-text">
+	    <b>
+		    {% if current_user.is_authenticated and game.id in current_user.get_library() %}
+		      <a class="no_effect card-link" href="{{ url_for('static', filename='txt/game.txt') }}" download>Скачать</a>
+		    {% else %}
+			    {% if game.discount %}
+			      Скидка {{ game.discount * 100 // game.original_price }}%<br>
+			      <s>{{ game.value_to_str(game.original_price) }}</s>
+			    {% endif %}
+			    {{ game.value_to_str(game.discount_price) }}
 		    {% endif %}
-		    {{ game.value_to_str(game.discount_price) }}
-	    {% endif %}
-    </b>
+	    </b><br>
+    </p>
   </div>
-  <div>
-    Издатель - {{ game.developer_name }}, Дата издания - {{ game.date_to_str(game.published_date) }}
-  </div>
+	<!--<a class="btn btn-primary" style="vert-align: bottom;" href="/games/{{  game.id  }}">Обзор</a>-->
+	<div class="card-footer">
+		<small class="text-muted">Дата издания - {{ game.date_to_str(game.published_date) }}</small>
+	</div>
+
+</div>
 </div>

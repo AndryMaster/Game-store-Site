@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>Сисок игр</h1>
+<h1 style="text-align: center;">Сисок игр</h1>
 
 {% if current_user.is_authenticated %}
 	<br>
@@ -14,11 +14,11 @@
  <h2 align="center">Пока пусто!</h2>
 {% endif %}
 
+<!--https://bootstrap-4.ru/docs/5.0/components/card/-->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 {% for game in games %}
-	<br>
-	<a class="no_effect" href="/games/{{  game.id  }}">
-	  {% include 'card.html' %}
-	</a>
+	{% include 'card.html' %}
 {% endfor %}
+</div>
 
 {% endblock %}

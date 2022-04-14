@@ -6,35 +6,24 @@
 <h1>Поиск игр</h1>
 <form action="" method="post">
   {{ form.hidden_tag() }}<br>
-
-	<p>
-    {{ form.select.label }}<br>
-    {{ form.select(class="form-control") }}<br>
+	<div class="form-group row">
+    {{ form.select.label(class="col-sm-2 col-form-label") }}
+		<div class="col-sm-15">{{ form.select(class="form-control") }}</div><br>
     {% for error in form.select.errors %}
-      <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
+			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+  </div>
 
-	<p>
-    {{ form.price_start.label }}
-    {{ form.price_start }}
-		{{ form.price_end.label }}
-    {{ form.price_end }}
+	<div class="form-group row">
+    {{ form.price_start.label(class="col-sm-1 col-form-label") }}
+		<div class="col-sm-2">{{ form.price_start(class="form-control") }}</div>
+		{{ form.price_end.label(class="col-form-label") }}
+		<div class="col-sm-2">{{ form.price_end(class="form-control") }}</div><br>
 
 		{% for error in form.price_start.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
 	  {% for error in form.price_end.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-
-<!--  <p>-->
-<!--  <label for="eduSelect">Категории и разделы игр:</label>-->
-<!--  <div class="form-group form-check">-->
-<!--	  {% for category in Categories %}-->
-<!--	    <input type="checkbox" class="form-check-input" id="cat" name="{{ category[0] }}">-->
-<!--	    <label class="form-check-label" for="acceptRules">{{ category[1] }}</label><br>-->
-<!--		{% endfor %}<br>-->
-<!--  </div>-->
-<!--  </p>-->
+  </div>
 
   <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
   {{ message }}

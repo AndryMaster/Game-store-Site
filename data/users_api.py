@@ -19,11 +19,13 @@ def set_password(password):
 
 
 class UsersResource(Resource):
-    def get(self, user_id):
+    def get(self, user_id, json_type=True):
         user = abort_if_user_not_found(user_id)
-        return jsonify({'user': user.to_dict(only=('name', 'about', 'email', 'created_date',
-                                                   'balance', 'hashed_password')),
-                        'user_favorites': user.get_favorites()})
+        info = {'user': user.to_dict(only=('name', 'about', 'email', 'created_date', 'balance')),   # 'hashed_password'
+                'user_favorites': user.get_favorites()}
+        if json_type:
+            return jsonify(info)
+        return info
 
     # def delete(self, user_id):
     #     session = db_session.create_session()
@@ -39,8 +41,8 @@ class UsersListResource(Resource):
     def get(self):
         session = db_session.create_session()
         users = session.query(User).all()
-        return jsonify({'users': [item.to_dict(only=('name', 'about', 'email', 'created_date',
-                                                     'balance', 'hashed_password')) for item in users]})
+        return jsonify({'users': [user.to_dict(only=('name', 'about', 'email', 'created_date', 'balance'))
+                                  for user in users]})  # 'hashed_password'
 
     def post(self):
         try:
@@ -51,10 +53,10 @@ class UsersListResource(Resource):
                 about=args['about'],
                 email=args['email'],
                 balance=args['balance'],
-                hashed_password=set_password(args['hashed_password']))
+                hashed_password=set_password(args['password']))
             session.add(user)
             session.commit()
-            return jsonify({'success': 'OK'})
+            return jsonify({'success': 'OK'})  # 'new_user': UsersResource.get(user_id=user.id, json_type=False)
         except:
             return jsonify({'error': 'wrong input data'})
 
@@ -64,4 +66,4 @@ parser_user_post.add_argument('name', required=True)
 parser_user_post.add_argument('about')
 parser_user_post.add_argument('email', required=True)
 parser_user_post.add_argument('balance', required=True, type=float)
-parser_user_post.add_argument('hashed_password', required=True)
+parser_user_post.add_argument('password', required=True)

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, abort, url_for
+from flask import Flask, render_template, redirect, request, abort, url_for, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy import desc, asc
 from flask_restful import Api
@@ -13,17 +13,17 @@ from data.users import User
 from data import db_session, users_api, games_api
 from pharse import *
 
+import os
+
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key'
 api = Api(app)
 
-content_type = {
-    1: 'Избранное',
-    2: 'Корзина',
-    3: 'Библиотека'
-}
+content_type = {1: 'Избранное', 2: 'Корзина', 3: 'Библиотека'}
+responses = {'logout': Response(f'<a href="/register">Зарегестрируйтесь</a> или <a href="/login">войдите</a> в акаунт'),
+             'private': Response(f'У вас нет доступа к этой странице <a href="/">Вернуться</a>')}
 
 
 @login_manager.user_loader
@@ -48,7 +48,7 @@ def index():
 def store():
     db_sess = db_session.create_session()
     start = request.args.get('start') if request.args.get('start') else 0
-    count = request.args.get('count') if request.args.get('count') else 10
+    count = request.args.get('count') if request.args.get('count') else 12
     if request.args.get('search') and current_user.is_authenticated and request.args.get('sort') in ['desk', 'ask']:
         try:
             sort_item = {'price': Games.discount_price, 'rating': Games.rating,
@@ -71,13 +71,15 @@ def store():
 
 @app.route("/games/<int:id>/")
 def games(id):
+    db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        db_sess = db_session.create_session()
         game = db_sess.query(Games).filter(Games.id == id, (Games.is_open |
-                                           Games.user_id == current_user.id | current_user.is_admin)).first()
-        comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-        if game:
-            return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
+                                                            Games.user_id == current_user.id | current_user.is_admin)).first()
+    else:
+        game = db_sess.query(Games).filter(Games.id == id).first()
+    comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
+    if game:
+        return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
     return abort(404)
 
 
@@ -91,7 +93,7 @@ def games_open(id):
             game.show_all()
             db_sess.commit()
             return redirect(url_for("games", id=id))
-    return abort(404)
+    return abort(responses['private'])
 
 
 @app.route("/games/<int:id>/delete/")
@@ -103,7 +105,7 @@ def games_delete(id):
             db_sess.delete(game)
             db_sess.commit()
             return redirect(url_for("store"))
-    return abort(404)
+    return abort(responses['private'])
 
 
 @app.route("/games/<int:id>/comment/", methods=['GET', 'POST'])
@@ -131,7 +133,7 @@ def comment(id):
             db_sess.commit()
             return redirect(url_for("games", id=id))
         return render_template("add_comment.html", title='Комментарий', form=form)
-    return abort(404)
+    return abort(responses['login'])
 
 
 @app.route("/games/<int:id>/comment_delete/<int:comment_id>/")
@@ -144,7 +146,8 @@ def comment_delete(id, comment_id):
             db_sess.delete(comment)
             db_sess.commit()
             return redirect(url_for("games", id=id))
-    return abort(404)
+        return abort(responses['private'])
+    return abort(responses['login'])
 
 
 @app.route("/profile/favorites/")
@@ -155,7 +158,7 @@ def favorites():
         games = db_sess.query(Games).filter(Games.id.in_(user.get_favorites())).all()
         return render_template("store_profile_content.html", content=content_type,
                                variant=1, games=games, title=content_type[1])
-    return abort(404)
+    return abort(responses['login'])
 
 
 @app.route("/profile/basket/")
@@ -170,7 +173,7 @@ def basket():
                 'mes': request.args.get('mes', '')}
         return render_template("store_profile_content.html", content=content_type,
                                variant=2, games=games, title=content_type[2], args=args)
-    return abort(404)
+    return abort(responses['login'])
 
 
 @app.route("/profile/library/")
@@ -181,7 +184,7 @@ def library():
         games = db_sess.query(Games).filter(Games.id.in_(user.get_library())).all()
         return render_template("store_profile_content.html", content=content_type,
                                variant=3, games=games, title=content_type[3])
-    return abort(404)
+    return abort(responses['login'])
 
 
 @app.route("/games/<int:id>/favorites/")
@@ -230,7 +233,7 @@ def set_library(user_id):
             db_sess.commit()
             mes = 'Покупка совершена успешно!'
         return redirect(url_for("basket", mes=mes))
-    return abort(404)
+    return abort(responses['private'])
 
 
 @app.route("/profile/", methods=['GET', 'POST'])
@@ -287,14 +290,14 @@ def add_games():
         if current_user.is_authenticated:
             count = form.result_count.data
             categories = [Categories[cat] for cat in Categories.keys() if cat in request.form]
-            for game in game_find_similar(result_count=count, count=50,
+            for game in game_find_similar(result_count=count, count=30 * form.select.data,
                                           keywords=form.keywords.data, categories=categories):
                 if add_game(game, user_id=current_user.id):
                     count -= 1
                     if not count:
                         break
             return redirect(url_for("store"))
-        return abort(404)
+        return abort(responses['login'])
     return render_template("add_game.html", title='Добавление игры', form=form)
 
 
@@ -302,10 +305,11 @@ def add_games():
 def filter():
     form = FilterForm()
     if form.validate_on_submit():
-        return redirect(url_for("store", search=True,
+        return redirect(url_for("store", search=1,
                                 sort_by=['rating', 'price', 'date'][(form.data.get('select') - 1) // 2],
                                 sort='desk' if form.data.get('select') % 2 == 1 else 'ask',
-                                pstart=form.data.get('price_start'), pend=form.data.get('price_end')))
+                                pstart=form.data.get('price_start'), pend=form.data.get('price_end'),
+                                start=0, count=12))
     return render_template("filter.html", title='Поиск игр', form=form)
 
 
@@ -315,7 +319,8 @@ def register():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', title='Регистрация', form=form, message="Такой пользователь уже есть")
+            return render_template('register.html', title='Регистрация', form=form,
+                                   message="Такой пользователь уже есть")
         user = User(name=form.name.data,
                     email=form.email.data,
                     about=form.about.data)
@@ -324,7 +329,6 @@ def register():
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
-        # return redirect('/login')
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for("store"))
     return render_template("register.html", title='Регистрация', form=form)
@@ -364,7 +368,6 @@ def add_game(data, user_id=0):
             game.set_published_date(data['published_date'])
             game.user_id = user_id
             db_sess.add(game)
-            print(f"{game.__repr__()} was add to DB")
         else:
             game.original_price = data['original_price']
             game.discount = data['discount']
@@ -375,21 +378,27 @@ def add_game(data, user_id=0):
 
 
 def main():
-    db_session.global_init("db/store.db")
+    # db_session.global_init("db/store.db")
+    db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "db/store.db")
+    db_session.global_init(db_path)
 
     api.add_resource(users_api.UsersListResource, '/api/v1/users')
     api.add_resource(users_api.UsersResource, '/api/v1/users/<int:user_id>')
     api.add_resource(games_api.GamesListResource, '/api/v1/games')
     api.add_resource(games_api.GamesResource, '/api/v1/games/<int:game_id>')
 
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    # return app
 
     # db_sess = db_session.create_session()
     # for game in game_find_similar(start=0, count=50, keywords='',
     #                               categories=[Categories['CATEGORY_RACING']]):
     #     add_game(game, user_id=1)
     # db_sess.commit()
+    # app.run()
 
 
 if __name__ == '__main__':
     main()
+    app.run(host='127.0.0.1', port=5000, debug=True)
+    # port = int(os.environ.get("PORT", 5000))
+    # app.run(host='0.0.0.0', port=port)

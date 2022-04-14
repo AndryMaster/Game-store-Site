@@ -2,22 +2,17 @@
 {% block content %}
 
 <h1>{{ content[variant] }}</h1>
-{% if variant == 3 %}<h5 class="grey">Кликните по игре, чтобы установить</h5>{% endif %}
+{% if variant == 3 %}<h5 class="grey">Кликните "Скачать", чтобы установить</h5>{% endif %}
 
 {% if not games %}
  <h2 align="center">Пока пусто!</h2>
 {% endif %}
 
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 {% for game in games %}
-	<br>
-	{% if not variant == 3 %}
-		<a class="no_effect" href="/games/{{  game.id  }}">
-		  {% include 'card.html' %}
-		</a>
-	{% else %}
-		<a class="no_effect" href="{{ url_for('static', filename='txt/game.txt') }}" download>{% include 'card.html' %}</a>
-	{% endif %}
+	{% include 'card.html' %}
 {% endfor %}
+</div>
 
 {% if variant == 2 and current_user.is_authenticated and games %}
 	<br>

@@ -1,7 +1,7 @@
-# import pprint
 from epicstore_api.api import EpicGamesStoreAPI
 from epicstore_api.models.categories import EGSCategory
 
+# import pprint
 
 Categories = {
     'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Экшн
@@ -43,7 +43,7 @@ def open_info(game):
     return info
 
 
-def game_find_similar(result_count=5, start=0, count=50, keywords='', categories=[], recurse=1):
+def game_find_similar(result_count=5, start=0, count=50, keywords='', categories=[]):
     data = __request.fetch_catalog(start=start, count=count, product_type='games', sort_by='effectiveDate',
                                    keywords=keywords, categories=categories)
     data = data['data']['Catalog']['catalogOffers']['elements']
@@ -52,28 +52,4 @@ def game_find_similar(result_count=5, start=0, count=50, keywords='', categories
         if index == result_count:
             break
         result.append(open_info(game))
-    # if len(result) < result_count and recurse <= 3:
-    #     result.extend(game_find_similar(result_count=result_count-len(result), start=start+count,
-    #                                     count=count, recurse=recurse+1, keywords=keywords, categories=categories))
-    print('Find all:', len(result))
     return result
-
-
-def value_to_str(value, is_total=False):
-    if isinstance(value, int) or isinstance(value, float):
-        if round(value, 2) or is_total:
-            return f"{value:0.2f} ₽"
-        else:
-            return "Бесплатно"
-    raise TypeError("Неправильный тип для валюты!")
-
-
-# print(value_to_str(213.20))
-# print(value_to_str(213.77))
-# print(value_to_str(333))
-# print(value_to_str(0))
-# print(value_to_str(0.0))
-# print(value_to_str(0.0, is_total=True))
-# print(value_to_str(990, is_total=True))
-# # print(value_to_str('2'))
-# print(value_to_str(100))

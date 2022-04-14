@@ -60,21 +60,23 @@ a.no_effect {
     color: #707070;
 }
 
-/*:hover :active*/
-/*background-image: linear-gradient(180deg, transparent 65%, #5bf 65%); for btn*/
-
-td.title {
-    background-color: #dddddd;
-    align: center;
-    font-size: 14pt;
-    padding: 5px;
-}
-td.ordinary {
-    background-color: #eeeeff;
-    align: center;
-    font-size: 14pt;
-    padding: 5px;
-}
 p {
     font-size: 14pt;
 }
+
+/*:hover :active*/
+/*background-image: linear-gradient(180deg, transparent 65%, #5bf 65%); for btn*/
+
+
+/*td.title {*/
+/*    background-color: #dddddd;*/
+/*    align: center;*/
+/*    font-size: 14pt;*/
+/*    padding: 5px;*/
+/*}*/
+/*td.ordinary {*/
+/*    background-color: #eeeeff;*/
+/*    align: center;*/
+/*    font-size: 14pt;*/
+/*    padding: 5px;*/
+/*}*/

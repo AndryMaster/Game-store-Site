@@ -15,7 +15,9 @@ class FilterForm(FlaskForm):
 
 
 class FindForm(FlaskForm):
-    keywords = StringField("Ключевые слова (нежелательно писать более 1 слова)", validators=[length(max=32)])
-    result_count = IntegerField("Максимальное кол-во результатов (не более 5)",
+    keywords = StringField("Ключевое слово:", validators=[length(max=10)])
+    result_count = IntegerField("Максимальное кол-во добавляемых игр:",
                                 validators=[DataRequired(), number_range(1, 5)], default=3)
+    choices = [(1, 'Маленький'), (2, 'Средний'), (3, 'Большой')]
+    select = SelectField(label="Диапазон поиска:", coerce=int, default=2, choices=choices)
     submit = SubmitField('Поиск')

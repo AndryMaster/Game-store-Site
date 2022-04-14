@@ -19,7 +19,7 @@ class GamesResource(Resource):
         game = abort_if_game_not_found(game_id)
         return jsonify({'games': {
             'game info': game.to_dict(only=('title', 'rating', 'placement_date', 'published_date',
-                                       'developer_name', 'user_id', 'is_open')),
+                                            'developer_name', 'user_id', 'is_open')),
             'price': game.to_dict(only=('original_price', 'discount_price', 'discount')),
             'image_urls': game.get_img_urls()}})
 
