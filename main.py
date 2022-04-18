@@ -22,8 +22,8 @@ app.config['SECRET_KEY'] = 'secret_key'
 api = Api(app)
 
 content_type = {1: 'Избранное', 2: 'Корзина', 3: 'Библиотека'}
-responses = {'logout': Response(f'<a href="/register">Зарегестрируйтесь</a> или <a href="/login">войдите</a> в акаунт'),
-             'private': Response(f'У вас нет доступа к этой странице <a href="/">Вернуться</a>')}
+responses = {'logout': Response(f'<h1><a href="/register">Зарегестрируйтесь</a> или <a href="/login">войдите</a> в акаунт</h1>'),
+             'private': Response(f'<h1>У вас нет доступа к этой странице <a href="/">Вернуться</a></h1>')}
 
 
 @login_manager.user_loader
@@ -47,35 +47,33 @@ def index():
 @app.route("/")
 def store():
     db_sess = db_session.create_session()
+
     start = request.args.get('start') if request.args.get('start') else 0
     count = request.args.get('count') if request.args.get('count') else 12
-    search = f"%{request.args.get('search_text').lower()}%" if request.args.get('search_text') else False
-    if request.args.get('search') and current_user.is_authenticated and\
-            request.args.get('sort') in ['desk', 'ask'] and not search:
+    sort_by = request.args.get('sort_by') if request.args.get('sort_by') else 'alfa'
+    sort_to = request.args.get('sort') if request.args.get('sort') in ['desk', 'ask'] else 'ask'
+    price_start = request.args.get('pstart') if request.args.get('pstart') else 0
+    price_end = request.args.get('pend') if request.args.get('pstart') else 100_000
+    search_text = request.args.get('search_text')
+    search_text = f"%{search_text.strip().replace(' ', '%').lower()}%"\
+        if search_text is not None and search_text.strip() else False
+
+    if request.args.get('search'):
         try:
             sort_item = {'price': Games.discount_price, 'rating': Games.rating,
-                         'date': Games.placement_date}[request.args.get('sort_by')]
-            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin,
-                                                request.args.get('pstart') <= Games.discount_price,
-                                                Games.discount_price <= request.args.get('pend')
-                                                ).order_by(desc(sort_item) if request.args.get('sort') == 'desk' else
-                                                           asc(sort_item), Games.id).offset(start).limit(count).all()
-        except:
-            return redirect(url_for("store"))
-    elif search:
-        try:
-            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin
-                                                if current_user.is_authenticated else Games.is_open,
-                                                Games.title.ilike(search) | Games.developer_name.ilike(search)
-                                                ).order_by(Games.title).offset(start).limit(count).all()
+                         'date': Games.placement_date, 'alfa': Games.title}[sort_by]
+            games = db_sess.query(Games).filter(  # Games.user_id == current_user.id
+                Games.is_open | current_user.is_admin if current_user.is_authenticated else Games.is_open,
+                price_start <= Games.discount_price, Games.discount_price <= price_end,
+                Games.title.ilike(search_text) | Games.developer_name.ilike(search_text) if search_text else True
+                ).order_by(desc(sort_item) if sort_to == 'desk' else
+                           asc(sort_item), Games.id).offset(start).limit(count).all()
         except:
             return redirect(url_for("store"))
     else:
-        if current_user.is_authenticated:
-            games = db_sess.query(Games).filter(Games.is_open | Games.id == current_user.id | current_user.is_admin
-                                                ).order_by(Games.id).offset(start).limit(count).all()
-        else:
-            games = db_sess.query(Games).filter(Games.is_open).order_by(Games.id).offset(start).limit(count).all()
+        games = db_sess.query(Games).filter(Games.is_open | current_user.is_admin  # Games.user_id == current_user.id
+                                            if current_user.is_authenticated else Games.is_open
+                                            ).order_by(Games.id).offset(start).limit(count).all()
     return render_template("store.html", games=games, title='RARE Games Store')
 
 
@@ -83,14 +81,14 @@ def store():
 def games(id):
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        game = db_sess.query(Games).filter(Games.id == id, (Games.is_open |
-                                                            Games.user_id == current_user.id | current_user.is_admin)).first()
+        game = db_sess.query(Games).filter(Games.id == id, (Games.is_open | current_user.is_admin)).first()
+        # Games.user_id == current_user.id
     else:
-        game = db_sess.query(Games).filter(Games.id == id).first()
+        game = db_sess.query(Games).filter(Games.id == id, Games.is_open).first()
+    if not game:
+        return abort(responses['private'])
     comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-    if game:
-        return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
-    return abort(404)
+    return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
 
 
 @app.route("/games/<int:id>/open/")
@@ -243,10 +241,31 @@ def set_library(user_id):
             db_sess.commit()
             mes = 'Покупка совершена успешно!'
         return redirect(url_for("basket", mes=mes))
-    return abort(responses['private'])
+    return abort(responses["private"])
 
 
-@app.route("/profile/", methods=['GET', 'POST'])
+@app.route("/users/")
+def users():
+    if current_user.is_authenticated and current_user.is_admin:
+        db_sess = db_session.create_session()
+        all_users = db_sess.query(User).all()
+        # print([(u.id, u.name) for u in all_users])
+        return render_template("users.html", title='Управление пользователями', users=all_users)
+    return abort(responses["private"])
+
+
+@app.route("/change_roots/<int:user_id>/", methods=['GET', 'POST'])
+def change_roots(user_id):
+    if current_user.is_authenticated and current_user.is_admin and user_id != 1:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(user_id)
+        user.is_admin = not user.is_admin
+        db_sess.commit()
+        return redirect(url_for("users"))
+    return abort(responses["private"])
+
+
+@app.route("/profile/")
 def profile():
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
@@ -297,7 +316,7 @@ def add_balance():
 def add_games():
     form = FindForm()
     if form.validate_on_submit():
-        if current_user.is_authenticated:
+        if current_user.is_authenticated and current_user.is_admin:
             count = form.result_count.data
             categories = [Categories[cat] for cat in Categories.keys() if cat in request.form]
             for game in game_find_similar(result_count=count, count=30 * form.select.data,
@@ -313,22 +332,18 @@ def add_games():
 
 @app.route("/search", methods=['POST'])
 def search():
-    search_text = request.form['search_text']
-    # print(search_text)
-    if search_text:
-        return redirect(url_for("store", search_text=search_text))
-    return redirect(url_for("store"))
+    return redirect(url_for("store", search=True, search_text=request.form['search_text']))
 
 
 @app.route("/filter", methods=['GET', 'POST'])
 def game_filter():
     form = FilterForm()
     if form.validate_on_submit():
-        return redirect(url_for("store", search=1,
-                                sort_by=['rating', 'price', 'date'][(form.data.get('select') - 1) // 2],
+        return redirect(url_for("store", search=True,
+                                sort_by=['rating', 'price', 'date', 'alfa'][(form.data.get('select') - 1) // 2],
                                 sort='desk' if form.data.get('select') % 2 == 1 else 'ask',
                                 pstart=form.data.get('price_start'), pend=form.data.get('price_end'),
-                                start=0, count=12))
+                                search_text=request.form['search_text'], start=0, count=12))
     return render_template("filter.html", title='Поиск игр', form=form)
 
 

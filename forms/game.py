@@ -2,12 +2,14 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SubmitField, SelectField
 from wtforms.validators import DataRequired, length, number_range
 
+choices = [(1, 'Популярности: сначала больше'), (2, 'Популярности: сначала меньше'),
+           (3, 'Цене: сначала больше'), (4, 'Цене: сначала меньше'),
+           (5, 'Дате публикации: сначала позже'), (6, 'Дате публикации: сначала раньше'),
+           (7, 'По алфавиту: сконца'), (8, 'По алфавиту: сначала')]
+
 
 class FilterForm(FlaskForm):
-    # categories, price, date, rating, id
-    choices = [(1, 'Популярности: сначала больше'), (2, 'Популярности: сначала меньше'),
-               (3, 'Цене: сначала больше'), (4, 'Цене: сначала меньше'),
-               (5, 'Дате публикации: сначала позже'), (6, 'Дате публикации: сначала раньше')]
+    search_text = StringField("Поиск по названию:", validators=[length(max=20)])
     select = SelectField(label="Сортировать по:", coerce=int, choices=choices)
     price_start = IntegerField("Цена: от ", validators=[number_range(0, 10_000)], default=0)
     price_end = IntegerField(" до ", validators=[number_range(0, 10_000)], default=10_000)

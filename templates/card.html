@@ -1,5 +1,5 @@
-<div class="col py-3" xmlns="http://www.w3.org/1999/html">
-<div class="card h-100 border-secondary">
+<div class="col py-3"><!--xmlns="http://www.w3.org/1999/html"-->
+<div class="card h-100 border-secondary shadow">
 
 	<a class="no_effect" href="/games/{{  game.id  }}">
 		<img src="{{ game.get_img_urls()['Tall'] }}" class="card-img-top" alt="Скриншот">
@@ -15,8 +15,9 @@
 		      <a class="no_effect card-link" href="{{ url_for('static', filename='txt/game.txt') }}" download>Скачать</a>
 		    {% else %}
 			    {% if game.discount %}
-			      Скидка {{ game.discount * 100 // game.original_price }}%<br>
-			      <s>{{ game.value_to_str(game.original_price) }}</s>
+						<!--<s>{{ game.value_to_str(game.original_price) }}</s>-->
+			      <span class="badge" style="background-color: yellowgreen; color: aliceblue">
+				        Скидка {{ game.discount * 100 // game.original_price }}%</span>
 			    {% endif %}
 			    {{ game.value_to_str(game.discount_price) }}
 		    {% endif %}

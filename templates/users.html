@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Пользователи:</h1>
+
+{% if current_user.is_authenticated and current_user.is_admin %}
+	<ul class="list-group list-group-flush my-3">
+		<li class="list-group-item"></li>
+		{% for user in users %}
+			<li class="list-group-item"><h4>{{ user.name }} {% if user.id != 1 %} <span
+							class="badge rounded-pill bg-secondary">
+							RARE id: {{ user.id }}</span></h4>{% endif %}
+				<h5>Статус: <b>{% if user.is_admin and user.id == 1 %} Администратор {% elif user.is_admin %} Модератор {% else %} Пользователь {% endif %}</b></h5>
+				<p>Баланс: <b>{{ user.value_to_str(user.balance, is_total=True) }}</b></p>
+				Почта <i><a href="mailto:{{ user.email }}" style="text-decoration-line: none">{{ user.email }}</a></i>
+				<p class="text-muted">{{ user.date_to_str(user.created_date) }}</p><br>
+				{% if user.id != 1 %}<a href="/change_roots/{{ user.id }}" class="btn {% if user.is_admin %}btn-warning{% else %}btn-danger{% endif %}">
+					{% if user.is_admin %} Сделать пользователем {% else %} Сделать модератором {% endif %}</a>{% endif %}
+			</li>
+		{% endfor %}
+		<li class="list-group-item"></li>
+	</ul>
+{% endif %}
+
+
+{% endblock %}

@@ -2,30 +2,31 @@
 
 {% block content %}
 <h1>Пользователь: {{ user.name }}</h1>
-<h5 class="grey">id: {{ user.id }}</h5><br>
+<h5 class="grey">RARE id: {{ user.id }}</h5><br>
 
 <h3>Баланс: <b>{{ user.value_to_str(user.balance, is_total=True) }}</b></h3>
 <a class="btn btn-warning" href="/add_balance">Пополнить баланс</a>
 
-<p><br>
-Информация:<br>
-Статус: {% if current_user.is_admin %} Администратор {% else %} Пользователь {% endif %}<br>
-Почта {{ user.email }}<br>
-Дата регистрации {{ user.date_to_str(user.created_date) }}<br>
-{% if current_user.about %}О пользователе: {{ user.about }}{% endif %}
-</p><br>
-
+<ul class="list-group list-group-flush my-3">
+	<li class="list-group-item text-muted"></li>
+	<li class="list-group-item"><h5>Статус: <b>{% if current_user.is_admin and current_user.id == 1 %} Администратор
+		{% elif current_user.is_admin %} Модератор {% else %} Пользователь {% endif %}</b></h5></li>
+	<li class="list-group-item">Почта <i><a href="mailto:{{ user.email }}" style="text-decoration-line: none">{{ user.email }}</a></i></li>
+  {% if current_user.about %}<li class="list-group-item">Описание: {{ user.about }}</li>{% endif %}
+  <li class="list-group-item text-muted">{{ user.date_to_str(user.created_date) }}</li>
+	<li class="list-group-item"></li>
+</ul>
 
 <!--  Buttons  -->
-<p>
+<div class="btn-group py-3">
   <a class="btn btn-primary" href="/profile/favorites">Избранное</a>
   <a class="btn btn-primary" href="/profile/basket">Корзина</a>
   <a class="btn btn-success" href="/profile/library">Библиотека</a>
-</p>
+</div><br>
 
-<p>
+<div>
 	<a class="btn btn-warning" href="/profile/settings">Настройки профиля</a>
 	<a class="btn btn-danger" href="/logout">Выйти из профиля</a>
-</p>
+</div>
 
 {% endblock %}

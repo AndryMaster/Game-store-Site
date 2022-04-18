@@ -5,38 +5,52 @@
 <h1>Настройки профиля</h1>
 <form action="" method="post">
   {{ form.hidden_tag() }}
-  <p>
-    {{ form.name.label }}<br>
-    {{ form.name(class="form-control") }}<br>
+
+	<div class="form-group row my-3">
+    {{ form.name.label(class="col-xxs-6 col-xs-3 col-sm-4 col-md-3 col-lg-3 col-form-label") }}
+		<div class="col-sm-4 col-md-5 col-lg-3">{{ form.name(class="form-control") }}</div>
     {% for error in form.name.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-	<p>
-    {{ form.about.label }}<br>
-    {{ form.about(class="form-control") }}<br>
+	</div>
+
+	<div class="form-group row my-3">
+    {{ form.about.label(class="col-xxs-6 col-xs-3 col-sm-4 col-md-3 col-lg-3 col-form-label") }}<br>
+		<div class="col-sm-5 col-md-6 col-lg-5">{{ form.about(class="form-control") }}</div>
     {% for error in form.about.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-	<p>При необходимости поменять пароль</p>
-  <p>
-    {{ form.new_password.label }}<br>
-    {{ form.new_password(class="form-control", type="password") }}<br>
-    {% for error in form.new_password.errors %}
-			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-  <p>
-    {{ form.new_password_again.label }}<br>
-    {{ form.new_password_again(class="form-control", type="password") }}<br>
-    {% for error in form.new_password_again.errors %}
-			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-	<p>
-    {{ form.old_password.label }}<br>
-    {{ form.old_password(class="form-control", type="password") }}<br>
+	</div>
+
+	<div class="col-md6 border rounded px-3 py-3">
+		<h5>При необходимости сменить пароль</h5>
+
+		<div class="form-group row my-3">
+	    {{ form.new_password.label(class="col-xxs-6 col-xs-3 col-sm-4 col-md-3 col-lg-3 col-form-label") }}
+			<div class="col-sm-4 col-md-5 col-lg-3">{{ form.new_password(class="form-control", type="password") }}</div>
+	    {% for error in form.new_password.errors %}
+				<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+		</div>
+
+		<div class="form-group row my-3">
+	    {{ form.new_password_again.label(class="col-xxs-6 col-xs-3 col-sm-4 col-md-3 col-lg-3 col-form-label") }}
+			<div class="col-sm-4 col-md-5 col-lg-3">{{ form.new_password_again(class="form-control", type="password") }}</div>
+	    {% for error in form.new_password_again.errors %}
+				<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+		</div>
+	</div>
+
+	<div class="form-group row my-3">
+		{{ form.old_password.label(class="col-xxs-6 col-xs-3 col-sm-4 col-md-3 col-lg-3 col-form-label") }}
+		<div class="col-sm-4 col-md-5 col-lg-3">{{ form.old_password(class="form-control", type="password") }}</div>
     {% for error in form.old_password.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </p>
-  <p>{{ form.submit(type="submit", class="btn btn-primary") }} <br> <a href="/profile">Вернуться в профиль</a></p>
-  {{message}}
+	</div>
+
+	<div class="form-group btn-group my-3 col-xxs-9 col-xs-9 col-sm-9 col-lg-6">
+			{{ form.submit(type="submit", class="btn btn-primary") }}
+      <a class="btn btn-outline-primary" href="/profile">Вернуться в профиль</a>
+	</div><br>
+
+	<h4>{{message}}</h4>
+
 </form>
 {% endblock %}

@@ -21,8 +21,7 @@ def set_password(password):
 class UsersResource(Resource):
     def get(self, user_id, json_type=True):
         user = abort_if_user_not_found(user_id)
-        info = {'user': user.to_dict(only=('name', 'about', 'email', 'created_date', 'balance')),   # 'hashed_password'
-                'user_favorites': user.get_favorites()}
+        info = {'user': user.to_dict(only=('name', 'about', 'email', 'created_date')), 'user_favorites': user.get_favorites()}
         if json_type:
             return jsonify(info)
         return info
@@ -41,8 +40,7 @@ class UsersListResource(Resource):
     def get(self):
         session = db_session.create_session()
         users = session.query(User).all()
-        return jsonify({'users': [user.to_dict(only=('name', 'about', 'email', 'created_date', 'balance'))
-                                  for user in users]})  # 'hashed_password'
+        return jsonify({'users': [user.to_dict(only=('name', 'about', 'email', 'created_date')) for user in users]})
 
     def post(self):
         try:

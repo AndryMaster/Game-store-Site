@@ -6,14 +6,21 @@
 <h1>Поиск игр</h1>
 <form action="" method="post">
   {{ form.hidden_tag() }}<br>
-	<div class="form-group row">
+	<div class="form-group row my-3">
+    {{ form.search_text.label(class="col-xxs-6 col-xs-4 col-md-3 col-lg-3 col-form-label") }}
+		<div class="col-md-6 col-lg-4">{{ form.search_text(class="form-control") }}</div><br>
+    {% for error in form.search_text.errors %}
+			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+
+	<div class="form-group row my-3">
     {{ form.select.label(class="col-xxs-6 col-xs-4 col-md-3 col-lg-3 col-form-label") }}
 		<div class="col-md-6 col-lg-4">{{ form.select(class="form-control") }}</div><br>
     {% for error in form.select.errors %}
 			<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div><br>
+  </div>
 
-	<div class="form-group row">
+	<div class="form-group row my-3">
     {{ form.price_start.label(class="col-xxs-10 col-xs-5 col-md-2 col-lg-2 col-form-label") }}
 		<div class="col-md-2">{{ form.price_start(class="form-control") }}</div>
 		{{ form.price_end.label(class="col-xxs-10 col-xs-5 col-md-2 col-lg-1 col-form-label") }}
@@ -23,10 +30,12 @@
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
 	  {% for error in form.price_end.errors %}
       <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
-  </div><br>
+  </div>
 
-	<div class="form-group row col-xxs-5 col-xs-4 col-sm-3 col-lg-3">{{ form.submit(type="submit", class="btn btn-primary") }}</div>
-  {{ message }}
+	<div class="form-group row my-3 col-xxs-5 col-xs-4 col-sm-3 col-lg-3">
+			{{ form.submit(type="submit", class="btn btn-primary") }}</div>
+
+	{{ message }}
 
 </form>
 {% endblock %}

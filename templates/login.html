@@ -2,25 +2,24 @@
 <meta charset="UTF-8">
 
 {% block content %}
-<h1>Авторизация</h1>
-<a href="/register">Зарагестрироваться</a>
-<p></p>
+<h1 class="mb-4">Авторизация</h1>
+<!--<a href="/register">Зарагестрироваться</a>-->
 <form action="" method="post">
   {{ form.hidden_tag() }}
-  <p>
-    {{ form.email.label }}<br>
-    {{ form.email(class="form-control", type="email") }}<br>
+  <div class="form-group row my-3">
+    {{ form.email.label(class="col-xxs-6 col-xs-2 col-sm-3 col-md-2 col-lg-1 col-form-label") }}
+	  <div class="col-sm-4 col-md-5 col-lg-3">{{ form.email(class="form-control", type="email") }}</div>
     {% for error in form.email.errors %}
-        <div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
-  </p>
-  <p>
-    {{ form.password.label }}<br>
-    {{ form.password(class="form-control", type="password") }}<br>
+        <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+  <div class="form-group row my-3">
+    {{ form.password.label(class="col-xxs-6 col-xs-2 col-sm-3 col-md-2 col-lg-1 col-form-label") }}
+	  <div class="col-sm-4 col-md-5 col-lg-3">{{ form.password(class="form-control", type="password") }}</div>
     {% for error in form.password.errors %}
-        <div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
-  </p>
-  <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-  <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-  <div>{{ message }}</div>
+        <p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+	<div class="form-group form-check form-switch my-3">{{ form.remember_me(class="form-check-input") }}{{ form.remember_me.label(class="form-check-label") }}</div>
+	<div class="form-group row my-3 col-xs-6 col-sm-5 col-lg-3">{{ form.submit(type="submit", class="btn btn-primary") }}</div>
+	<div class="text-danger"><b>{{ message }}</b></div>
 </form>
 {% endblock %}

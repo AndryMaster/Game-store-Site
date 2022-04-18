@@ -3,12 +3,15 @@
 
 <h1 style="text-align: center;">Сисок игр</h1>
 
-{% if current_user.is_authenticated %}
-	<br>
-	<a href="/add_game" class="btn btn-secondary">Предложить игру</a>
-	<a href="/filter" class="btn btn-secondary">Задать фильтр</a>
-	<br>
-{% endif %}
+<br>
+<div class="btn-group px-2">
+	{% if current_user.is_authenticated and current_user.is_admin %}
+	<a href="/users" class="btn btn-outline-danger">Пользователи</a>
+	<a href="/add_game" class="btn btn-outline-primary">Предложить игру</a>
+	{% endif %}
+	<a href="/filter" class="btn btn-outline-dark">Задать фильтр</a>
+</div>
+<br>
 
 {% if not games %}
  <h2 align="center">Пока пусто!</h2>
