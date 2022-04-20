@@ -87,7 +87,7 @@ def games(id):
     if not game:
         return abort(responses['private'])
     comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-    return render_template("game.html", game=game, title='RARE ' + {game.title}, comments=comments)
+    return render_template("game.html", game=game, title='RARE ' + game.title, comments=comments)
 
 
 @app.route("/games/<int:id>/open/")
