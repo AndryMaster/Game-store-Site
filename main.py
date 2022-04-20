@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, redirect, request, abort, url_for, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy import desc, asc
@@ -22,8 +23,8 @@ app.config['SECRET_KEY'] = 'secret_key'
 api = Api(app)
 
 content_type = {1: 'Избранное', 2: 'Корзина', 3: 'Библиотека'}
-responses = {'logout': Response(f'<h1><a href="/register">Зарегестрируйтесь</a> или <a href="/login">войдите</a> в акаунт</h1>'),
-             'private': Response(f'<h1>У вас нет доступа к этой странице <a href="/">Вернуться</a></h1>')}
+responses = {'logout': Response('<h1><a href="/register">Зарегестрируйтесь</a> или <a href="/login">войдите</a> в акаунт</h1>'),
+             'private': Response('<h1>У вас нет доступа к этой странице <a href="/">Вернуться</a></h1>')}
 
 
 @login_manager.user_loader
@@ -53,7 +54,7 @@ def store():
     sort_by = request.args.get('sort_by') if request.args.get('sort_by') else 'alfa'
     sort_to = request.args.get('sort') if request.args.get('sort') in ['desk', 'ask'] else 'ask'
     price_start = request.args.get('pstart') if request.args.get('pstart') else 0
-    price_end = request.args.get('pend') if request.args.get('pstart') else 100_000
+    price_end = request.args.get('pend') if request.args.get('pstart') else 100000
     search_text = request.args.get('search_text')
     search_text = f"%{search_text.strip().replace(' ', '%').lower()}%"\
         if search_text is not None and search_text.strip() else False
@@ -420,7 +421,7 @@ def main():
     api.add_resource(games_api.GamesListResource, '/api/v1/games')
     api.add_resource(games_api.GamesResource, '/api/v1/games/<int:game_id>')
 
-    # return app
+    return app
 
     # db_sess = db_session.create_session()
     # for game in game_find_similar(start=0, count=50, keywords='',
@@ -431,7 +432,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    main().run(host='127.0.0.1', port=5000, debug=True)
     # port = int(os.environ.get("PORT", 5000))
     # app.run(host='0.0.0.0', port=port)

@@ -1,7 +1,6 @@
+# -*- coding: utf-8 -*-
 from epicstore_api.api import EpicGamesStoreAPI
 from epicstore_api.models.categories import EGSCategory
-
-# import pprint
 
 Categories = {
     'CATEGORY_ACTION': EGSCategory.CATEGORY_ACTION,  # Экшн

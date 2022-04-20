@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, EmailField, StringField, TextAreaField, SubmitField, BooleanField, FloatField
 from wtforms.validators import DataRequired, length, EqualTo, number_range
@@ -14,7 +15,7 @@ class SettingsForm(FlaskForm):
 
 class AddBalanceForm(FlaskForm):
     password = PasswordField('Подтвердите действие паролем:', validators=[DataRequired()])
-    add_balance = FloatField('Пополнить счёт на сумму (₽):', validators=[DataRequired(), number_range(min=0, max=10_000,
+    add_balance = FloatField('Пополнить счёт на сумму (₽):', validators=[DataRequired(), number_range(min=0, max=10000,
                              message='Вы ввели отрицательную или слишком большую (более 10 000) сумму')])
     submit = SubmitField('Пополнить')
 

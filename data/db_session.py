@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sqlalchemy
 import sqlalchemy.orm as orm
 from sqlalchemy.orm import Session

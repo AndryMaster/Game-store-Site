@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import datetime
 import sqlalchemy
 from sqlalchemy import orm

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import jsonify
 from flask_restful import Resource, abort, reqparse
 from werkzeug.security import generate_password_hash
