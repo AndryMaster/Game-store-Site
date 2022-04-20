@@ -56,7 +56,7 @@ def store():
     price_start = request.args.get('pstart') if request.args.get('pstart') else 0
     price_end = request.args.get('pend') if request.args.get('pstart') else 100000
     search_text = request.args.get('search_text')
-    search_text = '%' + {search_text.strip().replace(' ', '%').lower()} + '%' if search_text is not None and search_text.strip() else False
+    search_text = '%' + search_text.strip().replace(' ', '%').lower() + '%' if search_text is not None and search_text.strip() else False
 
     if request.args.get('search'):
         try:
