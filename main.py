@@ -56,7 +56,7 @@ def store():
     price_start = request.args.get('pstart') if request.args.get('pstart') else 0
     price_end = request.args.get('pend') if request.args.get('pstart') else 100000
     search_text = request.args.get('search_text')
-    search_text = '%' + search_text.strip().replace(' ', '%').lower() + '%' if search_text is not None and search_text.strip() else False
+    search_text = f"%{search_text.strip().replace(' ', '%').lower()}%" if search_text is not None and search_text.strip() else False
 
     if request.args.get('search'):
         try:
@@ -87,7 +87,7 @@ def games(id):
     if not game:
         return abort(responses['private'])
     comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-    return render_template("game.html", game=game, title='RARE ' + game.title, comments=comments)
+    return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
 
 
 @app.route("/games/<int:id>/open/")
