@@ -249,7 +249,6 @@ def users():
     if current_user.is_authenticated and current_user.is_admin:
         db_sess = db_session.create_session()
         all_users = db_sess.query(User).all()
-        # print([(u.id, u.name) for u in all_users])
         return render_template("users.html", title='Управление пользователями', users=all_users)
     return abort(responses["private"])
 
