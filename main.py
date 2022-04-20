@@ -56,14 +56,13 @@ def store():
     price_start = request.args.get('pstart') if request.args.get('pstart') else 0
     price_end = request.args.get('pend') if request.args.get('pstart') else 100000
     search_text = request.args.get('search_text')
-    search_text = f"%{search_text.strip().replace(' ', '%').lower()}%"\
-        if search_text is not None and search_text.strip() else False
+    search_text = '%' + {search_text.strip().replace(' ', '%').lower()} + '%' if search_text is not None and search_text.strip() else False
 
     if request.args.get('search'):
         try:
             sort_item = {'price': Games.discount_price, 'rating': Games.rating,
                          'date': Games.placement_date, 'alfa': Games.title}[sort_by]
-            games = db_sess.query(Games).filter(  # Games.user_id == current_user.id
+            games = db_sess.query(Games).filter(
                 Games.is_open | current_user.is_admin if current_user.is_authenticated else Games.is_open,
                 price_start <= Games.discount_price, Games.discount_price <= price_end,
                 Games.title.ilike(search_text) | Games.developer_name.ilike(search_text) if search_text else True
@@ -83,13 +82,12 @@ def games(id):
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         game = db_sess.query(Games).filter(Games.id == id, (Games.is_open | current_user.is_admin)).first()
-        # Games.user_id == current_user.id
     else:
         game = db_sess.query(Games).filter(Games.id == id, Games.is_open).first()
     if not game:
         return abort(responses['private'])
     comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-    return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
+    return render_template("game.html", game=game, title='RARE ' + {game.title}, comments=comments)
 
 
 @app.route("/games/<int:id>/open/")
@@ -422,13 +420,6 @@ def main():
     api.add_resource(games_api.GamesResource, '/api/v1/games/<int:game_id>')
 
     return app
-
-    # db_sess = db_session.create_session()
-    # for game in game_find_similar(start=0, count=50, keywords='',
-    #                               categories=[Categories['CATEGORY_RACING']]):
-    #     add_game(game, user_id=1)
-    # db_sess.commit()
-    # app.run()
 
 
 if __name__ == '__main__':
