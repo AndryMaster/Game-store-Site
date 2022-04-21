@@ -42,7 +42,7 @@ def logout():
 
 @app.route("/index")
 def index():
-    return 'Рекламная страница'  # render_template("index.html")
+    return '<h1>Рекламная страница</h1>'  # render_template("index.html")
 
 
 @app.route("/")
@@ -50,52 +50,61 @@ def store():
     db_sess = db_session.create_session()
 
     start = request.args.get('start') if request.args.get('start') else 0
-    count = request.args.get('count') if request.args.get('count') else 12
-    sort_by = request.args.get('sort_by') if request.args.get('sort_by') else 'alfa'
+    count = 12  # request.args.get('count') if request.args.get('count') else 12
+    sort_by = request.args.get('sort_by')
     sort_to = request.args.get('sort') if request.args.get('sort') in ['desk', 'ask'] else 'ask'
     price_start = request.args.get('pstart') if request.args.get('pstart') else 0
     price_end = request.args.get('pend') if request.args.get('pstart') else 100000
     search_text = request.args.get('search_text')
     search_text = f"%{search_text.strip().replace(' ', '%').lower()}%" if search_text is not None and search_text.strip() else False
 
+    line = request.args.to_dict()
+    [line.pop(key, None) for key in ['search', 'start', 'count']]
+
     if request.args.get('search'):
         try:
-            sort_item = {'price': Games.discount_price, 'rating': Games.rating,
-                         'date': Games.placement_date, 'alfa': Games.title}[sort_by]
+            sort_item = Games.id
+            if sort_by:
+                sort_item = {'price': Games.discount_price, 'rating': Games.rating,
+                             'date': Games.placement_date, 'alfa': Games.title}[sort_by]
             games = db_sess.query(Games).filter(
                 Games.is_open | current_user.is_admin if current_user.is_authenticated else Games.is_open,
                 price_start <= Games.discount_price, Games.discount_price <= price_end,
                 Games.title.ilike(search_text) | Games.developer_name.ilike(search_text) if search_text else True
-                ).order_by(desc(sort_item) if sort_to == 'desk' else
-                           asc(sort_item), Games.id).offset(start).limit(count).all()
+                ).order_by(desc(sort_item) if sort_to == 'desk' else asc(sort_item), Games.id)\
+                .offset(start).limit(count + 1).all()
         except:
             return redirect(url_for("store"))
     else:
-        games = db_sess.query(Games).filter(Games.is_open | current_user.is_admin  # Games.user_id == current_user.id
+        games = db_sess.query(Games).filter(Games.is_open | current_user.is_admin
                                             if current_user.is_authenticated else Games.is_open
-                                            ).order_by(Games.id).offset(start).limit(count).all()
-    return render_template("store.html", games=games, title='RARE Games Store')
+                                            ).order_by(Games.id).offset(start).limit(count + 1).all()
+
+    return render_template("store.html", games=games[:count], title='RARE Games Store', start=int(start), count=count,
+                           length_games=len(games),
+                           add_line='&' + '&'.join([f'{k}={v}' for k, v in line.items()]) if line.keys() else '')
 
 
 @app.route("/games/<int:id>/")
 def games(id):
     db_sess = db_session.create_session()
+    is_comment = False
     if current_user.is_authenticated:
         game = db_sess.query(Games).filter(Games.id == id, (Games.is_open | current_user.is_admin)).first()
+        is_comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
     else:
         game = db_sess.query(Games).filter(Games.id == id, Games.is_open).first()
     if not game:
         return abort(responses['private'])
     comments = db_sess.query(Comments).filter(Comments.game_id == id).all()
-    return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments)
+    return render_template("game.html", game=game, title=f'RARE {game.title}', comments=comments, is_comment=bool(is_comment))
 
 
 @app.route("/games/<int:id>/open/")
 def games_open(id):
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and current_user.is_admin:
         db_sess = db_session.create_session()
-        game = db_sess.query(Games).filter(Games.id == id, (Games.user_id == current_user.id |
-                                                            current_user.is_admin)).first()
+        game = db_sess.query(Games).get(id)
         if game:
             game.show_all()
             db_sess.commit()
@@ -105,21 +114,39 @@ def games_open(id):
 
 @app.route("/games/<int:id>/delete/")
 def games_delete(id):
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and current_user.is_admin:
         db_sess = db_session.create_session()
         game = db_sess.query(Games).get(id)
-        if game and (game.user_id == current_user.id or current_user.is_admin):
+        if game:
             db_sess.delete(game)
             db_sess.commit()
             return redirect(url_for("store"))
     return abort(responses['private'])
 
 
-@app.route("/games/<int:id>/comment/", methods=['GET', 'POST'])
-def comment(id):
+@app.route("/games/<int:game_id>/new_comment/", methods=['GET', 'POST'])
+def new_comment(game_id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
-        comment = db_sess.query(Comments).filter(Comments.game_id == id, Comments.user_id == current_user.id).first()
+        form = CreateComment()
+
+        if form.validate_on_submit():
+            comment = Comments(game_id=game_id, user_id=current_user.id,
+                               rating=form.rating.data,
+                               content=form.content.data)
+            add_rating_to_game(game_id=game_id, rating=10 + form.rating.data)
+            db_sess.add(comment)
+            db_sess.commit()
+            return redirect(url_for("games", id=game_id))
+        return render_template("add_comment.html", title='Комментарий', form=form)
+    return abort(responses['login'])
+
+
+@app.route("/games/<int:game_id>/comment/<int:id>/", methods=['GET', 'POST'])
+def comment(game_id, id):
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        comment = db_sess.query(Comments).get(id)
         if comment:
             form = CreateComment(rating=comment.rating, content=comment.content)
         else:
@@ -127,32 +154,32 @@ def comment(id):
 
         if form.validate_on_submit():
             if not comment:
-                comment = Comments(game_id=id, user_id=current_user.id,
+                comment = Comments(game_id=game_id, user_id=current_user.id,
                                    rating=form.rating.data,
                                    content=form.content.data)
-                add_rating_to_game(game_id=id, rating=10 + form.rating.data)
+                add_rating_to_game(game_id=game_id, rating=10 + form.rating.data)
                 db_sess.add(comment)
-            else:
-                add_rating_to_game(game_id=id, rating=form.rating.data - comment.rating)
+            elif (comment.user_id == current_user.id or current_user.is_admin) and comment.game_id == game_id:
+                add_rating_to_game(game_id=game_id, rating=form.rating.data - comment.rating)
                 comment.rating = form.rating.data
                 comment.content = form.content.data
                 comment.update_date()
             db_sess.commit()
-            return redirect(url_for("games", id=id))
+            return redirect(url_for("games", id=game_id))
         return render_template("add_comment.html", title='Комментарий', form=form)
     return abort(responses['login'])
 
 
-@app.route("/games/<int:id>/comment_delete/<int:comment_id>/")
-def comment_delete(id, comment_id):
+@app.route("/games/<int:game_id>/comment_delete/<int:id>/")
+def comment_delete(game_id, id):
     if current_user.is_authenticated:
         db_sess = db_session.create_session()
-        comment = db_sess.query(Comments).get(comment_id)
-        if comment and (comment.user_id == current_user.id or current_user.is_admin) and comment.game_id == id:
-            add_rating_to_game(game_id=id, rating=-10 - comment.rating)
+        comment = db_sess.query(Comments).get(id)
+        if comment and (comment.user_id == current_user.id or current_user.is_admin) and comment.game_id == game_id:
+            add_rating_to_game(game_id=game_id, rating=-10 - comment.rating)
             db_sess.delete(comment)
             db_sess.commit()
-            return redirect(url_for("games", id=id))
+            return redirect(url_for("games", id=game_id))
         return abort(responses['private'])
     return abort(responses['login'])
 
@@ -330,7 +357,7 @@ def add_games():
 
 @app.route("/search", methods=['POST'])
 def search():
-    return redirect(url_for("store", search=True, search_text=request.form['search_text']))
+    return redirect(url_for("store", search=True, sort_by='alfa', search_text=request.form['search_text']))
 
 
 @app.route("/filter", methods=['GET', 'POST'])
@@ -341,7 +368,7 @@ def game_filter():
                                 sort_by=['rating', 'price', 'date', 'alfa'][(form.data.get('select') - 1) // 2],
                                 sort='desk' if form.data.get('select') % 2 == 1 else 'ask',
                                 pstart=form.data.get('price_start'), pend=form.data.get('price_end'),
-                                search_text=request.form['search_text'], start=0, count=12))
+                                search_text=request.form['search_text'], start=0))  # count=12
     return render_template("filter.html", title='Поиск игр', form=form)
 
 

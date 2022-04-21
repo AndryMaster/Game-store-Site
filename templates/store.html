@@ -1,7 +1,13 @@
 {% extends "base.html" %}
-{% block content %}
 
-<h1 style="text-align: center;">Сисок игр</h1>
+{% block content %}
+<style>
+h1, h2 {
+	text-align: center;
+}
+</style>
+
+<h1>Сисок игр</h1>
 
 <br>
 <div class="btn-group px-2">
@@ -14,14 +20,33 @@
 <br>
 
 {% if not games %}
- <h2 align="center">Пока пусто!</h2>
+ <h2 class="mt-4">Пока пусто!</h2>
 {% endif %}
 
-<!--https://bootstrap-4.ru/docs/5.0/components/card/-->
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-4">
 {% for game in games %}
 	{% include 'card.html' %}
 {% endfor %}
 </div>
+
+<!--<h4 class="my-3">-->
+<!--	{% if start %}<a href="/?search=True&start={% if start <= 12 %}0{% else %}{{ start - 12 }}{% endif %}">Назад</a>{% endif %}-->
+<!--	<a href="/?search=True&start={{ start }}">{{ (start - 1) // 12 + 2 }}</a>-->
+<!--	{% if count - start > 0 %}<a href="/?search=True&start={{ start + 12 }}">Вперёд</a>{% endif %}-->
+<!--</h4>-->
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if not start %}disabled{% endif %}">
+	    <a class="page-link" href="/?search=True&start={% if start <= count %}0{% else %}{{ start - count }}{% endif %}{{ add_line }}">
+		    Предыдущая</a></li>
+
+	  <li class="page-item active">
+		  <a class="page-link" href="/?search=True&start={{ start }}{{ add_line }}">{{ (start - 1) // count + 2 }}</a></li>
+
+	  <li class="page-item {% if not length_games > start + count %}disabled{% endif %}">
+		  <a class="page-link" href="/?search=True&start={{ start + count }}{{ add_line }}">Следующая</a></li>
+  </ul>
+</nav>
 
 {% endblock %}

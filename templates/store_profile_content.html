@@ -9,8 +9,8 @@ h1, h2 {
 <h1>{{ content[variant] }}</h1>
 {% if variant == 3 %}<h5 class="grey">Кликните "Скачать", чтобы установить</h5>{% endif %}
 
-{% if not games %}
- <h2 align="center">Пока пусто!</h2>
+{% if not games and not (variant == 2 and args['mes']) %}
+ <h2 class="mt-4">Пока пусто!</h2>
 {% endif %}
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
@@ -37,6 +37,6 @@ h1, h2 {
 	{% endif %}
 {% endif %}
 
-{% if variant == 2 and args['mes'] and current_user.is_authenticated %}<h2>{{ args['mes'] }}</h2>{% endif %}
+{% if variant == 2 and args['mes'] and current_user.is_authenticated %}<h2 class="mt-5">{{ args['mes'] }}</h2>{% endif %}
 <p></p>
 {% endblock %}

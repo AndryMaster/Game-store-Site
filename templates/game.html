@@ -5,7 +5,7 @@
 	img {
 		display: inline-block;
 	  height: auto;
-	  max-width: 75%;
+	  max-width: 90%;
 	}
 </style>
 
@@ -18,10 +18,9 @@
 	  <img src="{{ game.get_img_urls()['Wide'] }}" class="mx-auto d-block rounded shadow-lg" alt="Картинка из игры">
 </div>
 
-<div class="mb-5" style="margin-left: 10%">
 
-<ul class="list-group list-group-flush mt-5" style="margin-right: 10%">
-<!--	<li class="list-group-item text-muted"></li>-->
+
+<ul class="list-group list-group-flush mt-5">
 	<li class="list-group-item">
 	<h3>Стоимость
 		<b>
@@ -33,7 +32,8 @@
 	</h3>
 	</li>
 	{% if game.developer_name %}
-	<li class="list-group-item"><h5>Разработчик <a class="no_effect" href="/?search=True&search_text={{ game.developer_name }}"><i>{{ game.developer_name }}</i></a></h5></li>
+	<li class="list-group-item"><h5>Разработчик <a class="no_effect" href="/?search=True&search_text={{ game.developer_name }}">
+			<i>{{ game.developer_name }}</i></a></h5></li>
 	{% endif %}
 	<li class="list-group-item"><h6>Дата создания: {{ game.date_to_str(game.published_date) }}</h6></li>
   <li class="list-group-item"><h6>Дата добавления:  {{ game.date_to_str(game.placement_date) }}</h6></li>
@@ -42,7 +42,6 @@
 
 {% if current_user.is_authenticated %}
   <!--  Buttons  -->
-
   {% if not game.is_open and current_user.is_admin %}
     <div class="btn-group py-1">
       <a class="btn btn-primary" href="/games/{{ game.id }}/open/">Открыть для общего доступа</a>
@@ -50,8 +49,10 @@
     </div><br>
   {% else %}
     <div class="btn-group py-1">
-      <a class="btn btn-success" href="/games/{{ game.id }}/comment/">Добавить комментарий</a>
-      <a class="btn btn-primary" href="/games/{{ game.id }}/favorites/">
+	    {% if not is_comment %}
+        <a class="btn btn-primary" href="/games/{{ game.id }}/new_comment/">Добавить комментарий</a>
+	    {% endif %}
+      <a class="btn btn-success" href="/games/{{ game.id }}/favorites/">
 	        {% if game.id in current_user.get_favorites() %}В избранном{% else %}Добавить в избранное{% endif %}</a>
       {% if not game.id in current_user.get_library() %}
 		    <a class="btn btn-warning" href="/games/{{ game.id }}/basket/">
@@ -69,15 +70,15 @@
 	<h2 class="pt-4">Комментарии</h2>
 	<div class="col-md6 border rounded px-2 py-2">
 	{% for comment in comments %}
-	  <div class="col-md6 border rounded px-3 py-2">
+	  <div class="col-md6 border rounded px-3 py-2 my-2">
 	    <h3>{{ comment.user.name }}</h3>
 	    <div>Оценка: <b>{{ comment.rating }}/10</b></div>
 	    <div>{{ comment.content }}</div><!--Описание игры: -->
 		  <div class="text-muted">{{ comment.date_to_str(comment.published_date) }}</div>
 		  {% if current_user.is_authenticated and (current_user == comment.user or current_user.is_admin) %}
 	      <div class="btn-group py-1">
-	        <a href="/games/{{ game.id }}/comment/" class="btn btn-warning">Изменить</a>
-	        <a href="/games/{{ game.id }}/comment_delete/{{ comment.id }}/" class="btn btn-danger">Удалить</a>
+	        <a href="/games/{{ game.id }}/comment/{{ comment.id }}" class="btn btn-warning">Изменить</a>
+	        <a href="/games/{{ game.id }}/comment_delete/{{ comment.id }}" class="btn btn-danger">Удалить</a>
 	      </div>
 	    {% endif %}
 	  </div>
@@ -85,5 +86,5 @@
 	</div>
 {% endif %}
 
-</div>
+<br>
 {% endblock %}
